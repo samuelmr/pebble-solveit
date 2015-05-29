@@ -1,2 +1,1 @@
-# pebble-solveit
-Solve It - math watchface for Pebble
+# Solve It - math watchface for Pebble
