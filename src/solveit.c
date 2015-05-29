@@ -53,7 +53,7 @@ static void create_equation(int num, char *eq) {
       // square root
       snprintf(eq, 20, "√%d", num*num);
   }
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Created %s based on op %d (%d, %d)", eq, op, num, i);
+  // APP_LOG(APP_LOG_LEVEL_DEBUG, "Created %s based on op %d (%d, %d)", eq, op, num, i);
 }
 
 static void update_time(struct tm* t) {
@@ -120,10 +120,10 @@ static void window_load(Window *window) {
   clear_bg = GColorPastelYellow;
   clear_text = GColorBlack;
 #else
-  eq_bg = GColorWhite;
-  eq_text = GColorBlack;
-  clear_bg = GColorBlack;
-  clear_text = GColorWhite;
+  eq_bg = GColorBlack;
+  eq_text = GColorWhite;
+  clear_bg = GColorWhite;
+  clear_text = GColorBlack;
 #endif
 
 }
@@ -147,6 +147,8 @@ static void init(void) {
 
 static void deinit(void) {
   window_destroy(window);
+  tick_timer_service_unsubscribe();
+  accel_tap_service_unsubscribe();
 }
 
 int main(void) {
