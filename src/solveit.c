@@ -27,20 +27,23 @@ static void create_equation(int num, char *eq) {
   int op = rand() % 4;
   switch (op) {
     case 0:
-      // add
+      // subtract
       i = (rand() % 22) + 1;
       snprintf(eq, 20, "%d−%d", num+i, i);
       break;
     case 1: 
-      // subtract
-      i = (rand() % num-2) + 2;
-      snprintf(eq, 20, "%d+%d", num-i, i);
-      break;
+      // add
+      if (num > 2) {
+        i = (rand() % num - 2) + 2;
+        snprintf(eq, 20, "%d+%d", num-i, i);
+        return;
+      }
     case 2: 
-      // divide
-      i = (rand() % 5) + 2;
-      snprintf(eq, 20, "%d÷%d", num*i, i);
-      break;
+      // square root
+      if (num > 0) {
+        snprintf(eq, 20, "√%d", num*num);
+        return;
+      }
     case 3:
       // multiply (if num can be divided exactly)
       for (i=2; i<8; i++) {
@@ -50,8 +53,10 @@ static void create_equation(int num, char *eq) {
         }
       }
     default: 
-      // square root
-      snprintf(eq, 20, "√%d", num*num);
+      // divide
+      i = (rand() % 5) + 2;
+      snprintf(eq, 20, "%d÷%d", num*i, i);
+      break;
   }
   // APP_LOG(APP_LOG_LEVEL_DEBUG, "Created %s based on op %d (%d, %d)", eq, op, num, i);
 }
