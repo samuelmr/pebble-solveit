@@ -1,117 +1,106 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="initial-scale=1.0,user-scalable=no" />
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="HandheldFriendly" content="True" />
-<meta name="MobileOptimized" content="width" />
-<title>Configure</title>
-<style>
- body {
-  font-family: 'Open Sans',Helvetica,Arial,sans-serif;
-  font-size: smaller;
-  margin: 0;
- }
- form {
-  margin: 0 auto;
-  max-width: 20em;
- }
- header, fieldset {
-  background: linear-gradient(#ADF, #FFF); /* FF 3.6+ */  
-  background: -moz-linear-gradient(#ADF, #FFF); /* FF 3.6+ */  
-  background: -o-linear-gradient(#ADF, #FFF); /* FF 3.6+ */  
-  background: -webkit-linear-gradient(#ADF, #FFF); /* FF 3.6+ */  
-  border-radius: 4px;
-  border-width: 0;
-  font-size: larger;
-  margin: 0.5em auto 0 auto;
-  padding: 1em 0 2em 0;
-  width: 100%;
- }
- h1 {
-  color: #000;
-  font-size: 1.25em;
-  line-height: 1;
-  margin: 0;
-  padding: 0;
-  text-align: center;
-  text-shadow: 2px 2px 1px #FFF;
- }
- legend {
-  background-color: #F93;
-  border-radius: 4px;
-  box-shadow: 0 2px 2px #999;
-  color: #333;
-  font-weight: bold;
-  margin: 0 0 0 0.5em;
-  padding: 4px 8px;
- }
- ol {
-  counter-reset: item;
-  margin: 0;
-  padding: 0;
- }
- li {
-  display: block;
-  margin: 0;
-  padding: 0;
- }
- label, li:before {
-  content: counter(item) ": ";
-  counter-increment: item;
-  display: block;
-  float: left;
-  margin: 0;
-  padding: 0 0.25em 0 0;
-  text-align: right;
-  width: 4em;
- }
- li.button:before {
-  content: "+/-: ";
- }
- #worktime, #resttime, #repeat {
-  text-align: right;
- }
- input[type=submit] {
-  border-radius: 4px;
-  font-weight: bold;
-  margin: 0 0 0 6.5em;
-  text-align: left;
-  width: auto !important;
- }
- p {
-  margin: 0;
-  padding: 0;
- }
-</style>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0" name="viewport">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="width" />
+  <title>Configure</title>
+  <link rel="stylesheet" href="./css/slate.css">
+  <style>
+    .item {
+      border: 1px solid red;
+    }
+  </style>
 </head>
 <body>
 <form method="get" action="pebblejs://close#" onsubmit="sendConfig(); return false;" id="configForm">
-<header>
-<h1>Configure Work Out</h1>
-</header>
-<fieldset>
-<legend>Timing</legend>
-<p><label for="worktime">Work: </label> <input id="worktime" name="worktime" value="90" type="number" step="1" min="1" max="255" /> seconds</p>
-<p><label for="resttime">Rest: </label> <input id="resttime" name="resttime" value="30" type="number" step="1" min="1" max="255" /> seconds</p>
-<p><label for="repeat">Repeat: </label> <input id="repeat" name="repeat" value="4" type="number" step="1" min="1" max="255" /> times</p>
-</fieldset>
-<fieldset>
-<legend>Routines</legend>
-<ol id="routinelist">
-<li><input name="routine" value="Push-ups" size="20" maxlength="20" /></li>
-<li><input name="routine" value="Sit-ups" size="20" maxlength="20" /></li>
-<li><input name="routine" value="Lunges" size="20" maxlength="20" /></li>
-<li><input name="routine" value="Pull-ups" size="20" maxlength="20" /></li>
-<li class="button"><button onclick="clone(this); return false;">+</button> <button onclick="destroy(this); return false;">&minus;</button></li>
-</ol>
-</fieldset>
-<fieldset>
-<legend>Confirm</legend>
-<input type="submit" value="Use these settings" />
-</fieldset>
+  <fieldset class="item-container">
+    <div class="item-container-header">Look and feel</div>
+    <div class="item-container-content">
+      <label class="item">
+        Solve by shaking wrist
+        <input type="checkbox" class="item-toggle" name="shake" />
+      </label>
+    </div>
+    <div class="item-container-content">
+      <label class="item">
+        Show labels
+        <input type="checkbox" class="item-toggle" name="labels" />
+      </label>
+    </div>
+  </fieldset>
+  <fieldset class="item-container">
+    <div class="item-container-header">Which operators in expressions</div>
+    <div class="item-container-content">
+      <label class="item">Add
+        <select name="add" dir='rtl' class="item-select">
+          <option class="item-select-option" value="0">Never</option>
+          <option class="item-select-option" value="1">Rarely</option>
+          <option class="item-select-option" value="3" selected="selected">Regularly</option>
+          <option class="item-select-option" value="5">Often</option>
+        </select>
+      </label>
+    </div>
+    <div class="item-container-content">
+      <label class="item">Subtract
+        <select name="subtract" dir='rtl' class="item-select">
+          <option class="item-select-option" value="0">Never</option>
+          <option class="item-select-option" value="1">Rarely</option>
+          <option class="item-select-option" value="3" selected="selected">Regularly</option>
+          <option class="item-select-option" value="5">Often</option>
+        </select>
+      </label>
+    </div>
+    <div class="item-container-content">
+      <label class="item">Multiply
+        <select name="multiply" dir='rtl' class="item-select">
+          <option class="item-select-option" value="0">Never</option>
+          <option class="item-select-option" value="1">Rarely</option>
+          <option class="item-select-option" value="3">Regularly</option>
+          <option class="item-select-option" value="5" selected="selected">Often</option>
+        </select>
+      </label>
+    </div>
+    <div class="item-container-content">
+      <label class="item">Divide
+        <select name="divide" dir='rtl' class="item-select">
+          <option class="item-select-option" value="0">Never</option>
+          <option class="item-select-option" value="1" selected="selected">Rarely</option>
+          <option class="item-select-option" value="3">Regularly</option>
+          <option class="item-select-option" value="5">Often</option>
+        </select>
+      </label>
+    </div>
+    <div class="item-container-content">
+      <label class="item">Square
+        <select name="square" dir='rtl' class="item-select">
+          <option class="item-select-option" value="0">Never</option>
+          <option class="item-select-option" value="1">Rarely</option>
+          <option class="item-select-option" value="3">Regularly</option>
+          <option class="item-select-option" value="5" selected="selected">Often</option>
+        </select>
+      </label>
+    </div>
+    <div class="item-container-content">
+      <label class="item">Square root
+        <select name="root" dir='rtl' class="item-select">
+          <option class="item-select-option" value="0">Never</option>
+          <option class="item-select-option" value="1" selected="selected">Rarely</option>
+          <option class="item-select-option" value="3">Regularly</option>
+          <option class="item-select-option" value="5">Often</option>
+        </select>
+      </label>
+    </div>
+  </fieldset>
+  <fieldset class="item-container">
+    <div class="button-container">
+      <input type="submit" class="item-button" value="SEND">
+    </div>
+  </fieldset
 </form>
+<script type="text/javascript" src="./js/slate.min.js"></script>
 <script>
 var f = document.getElementById('configForm');
 var inputs = f.getElementsByTagName('input');
@@ -119,55 +108,25 @@ var confString = getQueryParam('conf');
 if (confString && (confString.substr(0, 1) == '{')) {
  var initConf = JSON.parse(confString);
  if (initConf) {
-  if (initConf.work) {
-   f.worktime.value = initConf.work;
+  if (initConf.shake) {
+   f.shake.checked = true;
   }
-  if (initConf.rest) {
-   f.resttime.value = initConf.rest;
+  if (initConf.labels) {
+   f.labels.checked = true;
   }
-  if (initConf.repeat) {
-   f.repeat.value = initConf.repeat;
-  }
-  if (initConf.routines && initConf.routines.length) {
-   var ol = document.getElementById('routinelist');
-   for (var i=ol.children.length-2; i>0; i--) {
-    ol.removeChild(ol.children[i]);
-   }
-   for (var i=0; i<initConf["routines"].length; i++) {
-    var input = ol.children[ol.children.length-2].getElementsByTagName('input')[0];
-    input.value = initConf["routines"][i];
-    if (i < initConf["routines"].length-1) {
-     var cloneB = ol.children[ol.children.length-1].getElementsByTagName('button')[0];
-     cloneB.onclick();
-    }
+  for (var k in 'add,subtract,multiple,divide,square,root'.split(',')) {
+   console.log(k + ': ' + initConf[k]);
+   if (f[k + '-' + initConf[k]]) {
+    f[k + '-' + initConf[k]].checked = true;
    }
   }
- }
-}
-for (var i=0; i<inputs.length; i++) {
- var val;
- if (val = getQueryParam(inputs[i].name)) {
-  inputs[i].value = val;
  }
 }
 function sendConfig() {
  var conf = {};
- conf["routines"] = [];
  for (var i=0; i<inputs.length; i++) {
-  if (inputs[i].name == "worktime") {
-    conf['work'] = parseInt(inputs[i].value);
-  }
-  else if (inputs[i].name == 'resttime') {
-    conf['rest'] = parseInt(inputs[i].value);
-  }
-  else if (inputs[i].name == 'repeat') {
-    conf['repeat'] = parseInt(inputs[i].value);
-  }
-  else if (inputs[i].type != "submit") {
-    conf['routines'].push(inputs[i].value);
-  }
+  conf[inputs[i].name] = parseInt(inputs[i].value);
  }
- // alert(JSON.stringify(conf));
  var return_to = (getQueryParam('return_to') || f.action) +
                  encodeURIComponent(JSON.stringify(conf));
  document.location = return_to;
@@ -181,32 +140,6 @@ function getQueryParam(variable) {
   if (pair[0] == variable) {
    return decodeURIComponent(pair[1]);
   }
- }
- return false;
-}
-function clone(button) {
- // alert(button);
- if (!button.parentNode || !button.parentNode.parentNode) {
-  return false;
- }
- var li = button.parentNode;
- var ul = button.parentNode.parentNode;
- // var obj = li.previousSibling;
- var obj = ul.children[ul.children.length-2];
- // alert(obj);
- var copy = obj.cloneNode(true);
- ul.insertBefore(copy, li);
- return false;
-}
-function destroy(button) {
- // alert(button);
- if (!button.parentNode || !button.parentNode.parentNode) {
-  return false;
- }
- var li = button.parentNode;
- var ol = button.parentNode.parentNode;
- if (ol.children.length > 2) {
-  ol.removeChild(ol.children[ol.children.length-2]);
  }
  return false;
 }
