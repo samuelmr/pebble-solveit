@@ -103,6 +103,7 @@
 <script>
 var f = document.getElementById('configForm');
 var inputs = f.getElementsByTagName('input');
+var selects = f.getElementsByTagName('select');
 var confString = getQueryParam('conf');
 if (confString && (confString.substr(0, 1) == '{')) {
  var initConf = JSON.parse(confString);
@@ -130,8 +131,10 @@ if (confString && (confString.substr(0, 1) == '{')) {
 }
 function sendConfig() {
  var conf = {};
- for (var i=0; i<inputs.length; i++) {
-  conf[inputs[i].name] = parseInt(inputs[i].value);
+ conf.shake = f.shake.checked ? 1 : 0;
+ conf.labels = f.labels.checked ? 1 : 0;
+ for (var i=0; i<selects.length; i++) {
+  conf[selects[i].name] = parseInt(selects[i][selects[i].selectedIndex].value);
  }
  var return_to = (getQueryParam('return_to') || f.action) +
                  encodeURIComponent(JSON.stringify(conf));
