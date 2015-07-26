@@ -170,6 +170,10 @@ void in_received_handler(DictionaryIterator *received, void *context) {
   root = rt->value->int16;
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Configured root to: %d", root);
 
+  time_t tm = time(NULL);
+  struct tm *tms;
+  tms = localtime(&tm);
+  update_time(tms);
 }
 
 void in_dropped_handler(AppMessageResult reason, void *context) {
