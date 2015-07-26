@@ -1,0 +1,4 @@
+.lock-waf*
+.DS_Store
+appstore-resources
+build
