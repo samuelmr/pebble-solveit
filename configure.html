@@ -100,7 +100,6 @@
     </div>
   </fieldset
 </form>
-<script type="text/javascript" src="./js/slate.min.js"></script>
 <script>
 var f = document.getElementById('configForm');
 var inputs = f.getElementsByTagName('input');
@@ -114,10 +113,17 @@ if (confString && (confString.substr(0, 1) == '{')) {
   if (initConf.labels) {
    f.labels.checked = true;
   }
-  for (var k in 'add,subtract,multiple,divide,square,root'.split(',')) {
-   console.log(k + ': ' + initConf[k]);
-   if (f[k + '-' + initConf[k]]) {
-    f[k + '-' + initConf[k]].checked = true;
+  var ops = 'add,subtract,multiply,divide,square,root'.split(',');
+  for (var i=0; i<ops.length; i++) {
+   var k = ops[i];
+   var s = f[k];
+   for (var j=0; j<s.options.length; j++) {
+    if (s.options[j].value == initConf[k]) {
+     s.options[j].selected = true;
+    }
+    else {
+     s.options[j].selected = false;
+    }
    }
   }
  }
@@ -144,5 +150,6 @@ function getQueryParam(variable) {
  return false;
 }
 </script>
+<script type="text/javascript" src="./js/slate.min.js"></script>
 </body>
 </html>
