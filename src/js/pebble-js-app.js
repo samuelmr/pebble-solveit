@@ -11,7 +11,7 @@ var config = {
   "add": REGULARLY,
   "subtract": REGULARLY,
   "multiply": OFTEN,
-  "divide": NEVER,
+  "divide": RARELY,
   "square": OFTEN,
   "root": RARELY
 };
@@ -20,7 +20,7 @@ Pebble.addEventListener("ready",
   function(e) {
     var storedConf = localStorage.getItem("config");
     if (storedConf && (storedConf.substr(0, 1) == "{")) {
-      // config = JSON.parse(storedConf);
+      config = JSON.parse(storedConf);
     }
     console.log("JavaScript app ready and running!");
     initialized = true;
