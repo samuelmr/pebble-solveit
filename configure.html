@@ -30,9 +30,9 @@
     <div class="item-container-header">Which operators in expressions</div>
     <div class="item-container-content">
       <label class="item tab-buttons">
-        <a name="beginner" class="tab-button" onclick="setMode(this.name);">Beginner</a>
-        <a name="normal" class="tab-button active" onclick="setMode(this.name);">Normal</a>
-        <a name="hardcore" class="tab-button" onclick="setMode(this.name);">Hardcore</a>
+        <a name="mode" class="tab-button" id="beginner-tab" onclick="setMode('beginner');">Beginner</a>
+        <a name="mode" class="tab-button active" id="normal-tab" onclick="setMode('normal');">Normal</a>
+        <a name="mode" class="tab-button" id="hardcore-tab" onclick="setMode('hardcore');">Hardcore</a>
       </label>
     </div>
     <div class="item-container-content">
@@ -106,6 +106,9 @@
 var f = document.getElementById('configForm');
 var inputs = f.getElementsByTagName('input');
 var selects = f.getElementsByTagName('select');
+var bt = document.getElementById('beginner-tab');
+var nt = document.getElementById('normal-tab');
+var ht = document.getElementById('hardcore-tab');
 var confString = getQueryParam('conf');
 if (confString && (confString.substr(0, 1) == '{')) {
  var initConf = JSON.parse(confString);
@@ -140,6 +143,8 @@ function setMode(mode) {
     f.divide.selectedIndex = 0;
     f.square.selectedIndex = 0;
     f.root.selectedIndex = 0;
+	nt.className.replace(' active', '');
+	ht.className.replace(' active', '');
     break;
   case 'hardcore':
     f.add.selectedIndex = 0;
@@ -148,6 +153,8 @@ function setMode(mode) {
     f.divide.selectedIndex = 2;
     f.square.selectedIndex = 3;
     f.root.selectedIndex = 3;
+	nt.className.replace(' active', '');
+	ht.className.replace(' active', '');
     break;
   default:
     f.add.selectedIndex = 2;
