@@ -8,11 +8,6 @@
   <meta name="MobileOptimized" content="width" />
   <title>Configure</title>
   <link rel="stylesheet" href="./css/slate.min.css">
-  <style>
-    .item {
-      border: 1px solid red;
-    }
-  </style>
 </head>
 <body>
 <form method="get" action="pebblejs://close#" onsubmit="sendConfig(); return false;" id="configForm">
@@ -33,6 +28,13 @@
   </fieldset>
   <fieldset class="item-container">
     <div class="item-container-header">Which operators in expressions</div>
+    <div class="item-container-content">
+      <label class="item tab-buttons">
+        <a name="beginner" class="tab-button" onclick="setMode(this.name);">Beginner</a>
+        <a name="normal" class="tab-button active" onclick="setMode(this.name);">Normal</a>
+        <a name="hardcore" class="tab-button" onclick="setMode(this.name);">Hardcore</a>
+      </label>
+    </div>
     <div class="item-container-content">
       <label class="item">Add
         <select name="add" dir='rtl' class="item-select">
@@ -127,6 +129,33 @@ if (confString && (confString.substr(0, 1) == '{')) {
     }
    }
   }
+ }
+}
+function setMode(mode) {
+ switch(mode) {
+  case 'beginner':
+    f.add.selectedIndex = 3;
+    f.subtract.selectedIndex = 2;
+    f.multiply.selectedIndex = 1;
+    f.divide.selectedIndex = 0;
+    f.square.selectedIndex = 0;
+    f.root.selectedIndex = 0;
+    break;
+  case 'hardcore':
+    f.add.selectedIndex = 0;
+    f.subtract.selectedIndex = 0;
+    f.multiply.selectedIndex = 1;
+    f.divide.selectedIndex = 2;
+    f.square.selectedIndex = 3;
+    f.root.selectedIndex = 3;
+    break;
+  default:
+    f.add.selectedIndex = 2;
+    f.subtract.selectedIndex = 2;
+    f.multiply.selectedIndex = 3;
+    f.divide.selectedIndex = 1;
+    f.square.selectedIndex = 3;
+    f.root.selectedIndex = 1;    
  }
 }
 function sendConfig() {
