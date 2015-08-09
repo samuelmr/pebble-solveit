@@ -44,7 +44,7 @@ static void create_equation(int num, char *eq) {
   
   int all = add + subtract + multiply + divide + square + root;
   int op = rand() % all;
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Num: %d, Op: %d (add %d, sub %d, div %d, mul %d, sq %d, root %d)", num, op, add, subtract, divide, multiply, square, root);
+  // APP_LOG(APP_LOG_LEVEL_DEBUG, "Num: %d, Op: %d (add %d, sub %d, div %d, mul %d, sq %d, root %d)", num, op, add, subtract, divide, multiply, square, root);
   if (root && (op >= all - root)) {
     if (num > 0) {
       snprintf(eq, 20, "√%d", num*num);
@@ -59,7 +59,7 @@ static void create_equation(int num, char *eq) {
         return;
       }
     }
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Tried to square %d, failed", num);
+    // APP_LOG(APP_LOG_LEVEL_DEBUG, "Tried to square %d, failed", num);
   }
   if (multiply && (op >= add + subtract + divide)) {
     for (i=2; i<8; i++) {
@@ -68,7 +68,7 @@ static void create_equation(int num, char *eq) {
         return;
       }
     }
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Tried to multiply %d, failed", num);
+    // APP_LOG(APP_LOG_LEVEL_DEBUG, "Tried to multiply %d, failed", num);
   }
   if (divide && (op >= add + subtract)) {
     i = (rand() % 5) + 2;
@@ -89,7 +89,7 @@ static void create_equation(int num, char *eq) {
   }
   // still here? (e.g. multiply chosen but not possible) - let's retry
   create_equation(num, eq);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "No suitable op, retrying");
+  // APP_LOG(APP_LOG_LEVEL_DEBUG, "No suitable op, retrying");
 }
 
 static void update_time(struct tm* t) {
