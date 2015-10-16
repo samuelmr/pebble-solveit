@@ -41,7 +41,7 @@ enum MessageKey {
 
 static void create_equation(int num, char *eq) {
   int i = 0;
-  
+
   int all = add + subtract + multiply + divide + square + root;
   int op = rand() % all;
   // APP_LOG(APP_LOG_LEVEL_DEBUG, "Num: %d, Op: %d (add %d, sub %d, div %d, mul %d, sq %d, root %d)", num, op, add, subtract, divide, multiply, square, root);
@@ -205,14 +205,14 @@ static void window_load(Window *window) {
   clear_text = GColorBlack;
 #endif
 
-  hour_layer = text_layer_create((GRect) { .origin = { 0, 10 }, .size = { bounds.size.w, 65 } });
+  hour_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2-62 }, .size = { bounds.size.w, 65 } });
   text_layer_set_font(hour_layer, eq_font);
   text_layer_set_text(hour_layer, hour_text);
   text_layer_set_background_color(hour_layer, GColorClear);
   text_layer_set_text_alignment(hour_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(hour_layer));
 
-  hour_label_layer = text_layer_create((GRect) { .origin = { 0, 60 }, .size = { bounds.size.w, 15 } });
+  hour_label_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2-12 }, .size = { bounds.size.w, 15 } });
   text_layer_set_font(hour_label_layer, label_font);
   text_layer_set_text(hour_label_layer, "hours");
   text_layer_set_background_color(hour_label_layer, GColorClear);
@@ -220,14 +220,14 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(hour_label_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(hour_label_layer));
 
-  min_layer = text_layer_create((GRect) { .origin = { 0, 75 }, .size = { bounds.size.w, 65 } });
+  min_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2+3 }, .size = { bounds.size.w, 65 } });
   text_layer_set_font(min_layer, eq_font);
   text_layer_set_text(min_layer, min_text);
   text_layer_set_background_color(min_layer, GColorClear);
   text_layer_set_text_alignment(min_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(min_layer));
 
-  min_label_layer = text_layer_create((GRect) { .origin = { 0, 125 }, .size = { bounds.size.w, 15 } });
+  min_label_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2+53 }, .size = { bounds.size.w, 15 } });
   text_layer_set_font(min_label_layer, label_font);
   text_layer_set_text(min_label_layer, "minutes");
   text_layer_set_background_color(min_label_layer, GColorClear);
