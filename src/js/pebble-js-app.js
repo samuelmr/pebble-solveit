@@ -1,6 +1,6 @@
 var initialized = false;
 var messageQueue = [];
-var NEVER= 0;
+// var NEVER= 0;
 var RARELY = 1;
 var REGULARLY = 3;
 var OFTEN = 5;

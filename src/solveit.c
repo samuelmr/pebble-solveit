@@ -15,7 +15,8 @@ static GColor eq_text;
 static GColor clear_bg;
 static GColor clear_text;
 static bool clear = false;
-static bool hide_labels = false;
+static bool hide_labels;
+static int shake;
 enum Interval {
   NEVER= 0,
   RARELY = 1,
@@ -132,7 +133,7 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 
 void in_received_handler(DictionaryIterator *received, void *context) {
   Tuple *sht = dict_find(received, SHAKE);
-  int shake = sht->value->int8;
+  shake = sht->value->int8;
   accel_tap_service_unsubscribe();
   if (shake) {
     accel_tap_service_subscribe(tap_handler);
@@ -191,7 +192,8 @@ static void window_load(Window *window) {
 
   app_message_register_inbox_received(in_received_handler);
   app_message_register_inbox_dropped(in_dropped_handler);
-  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+  // app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+  app_message_open(128, 128);
 
 #ifdef PBL_COLOR
   eq_bg = GColorOxfordBlue;
@@ -245,6 +247,14 @@ static void window_unload(Window *window) {
 }
 
 static void init(void) {
+  shake = persist_exists(SHAKE) ? persist_read_bool(SHAKE) : true;
+  hide_labels = persist_exists(LABELS) ? persist_read_int(LABELS) : false;
+  add = persist_exists(ADD) ? persist_read_int(ADD) : REGULARLY;
+  subtract = persist_exists(SUBTRACT) ? persist_read_int(SUBTRACT) : REGULARLY;
+  multiply = persist_exists(MULTIPLY) ? persist_read_int(MULTIPLY) : OFTEN;
+  divide = persist_exists(DIVIDE) ? persist_read_int(DIVIDE) : RARELY;
+  square = persist_exists(SQUARE) ? persist_read_int(SQUARE) : OFTEN;
+  root = persist_exists(ROOT) ? persist_read_int(ROOT) : RARELY;
   accel_tap_service_subscribe(tap_handler);
   tick_timer_service_subscribe(MINUTE_UNIT, &handle_minute_tick);
   window = window_create();
@@ -257,6 +267,14 @@ static void init(void) {
 }
 
 static void deinit(void) {
+  persist_write_bool(SHAKE, shake);
+  persist_write_bool(LABELS, hide_labels);
+  persist_write_int(ADD, add);
+  persist_write_int(SUBTRACT, subtract);
+  persist_write_int(MULTIPLY, multiply);
+  persist_write_int(DIVIDE, divide);
+  persist_write_int(SQUARE, square);
+  persist_write_int(ROOT, root);
   window_destroy(window);
   tick_timer_service_unsubscribe();
   accel_tap_service_unsubscribe();
