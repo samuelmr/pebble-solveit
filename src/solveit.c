@@ -237,6 +237,9 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(min_label_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(min_label_layer));
 
+  layer_set_hidden(text_layer_get_layer(hour_label_layer), hide_labels ? true : false);
+  layer_set_hidden(text_layer_get_layer(min_label_layer), hide_labels ? true : false);
+  
 }
 
 static void window_unload(Window *window) {
