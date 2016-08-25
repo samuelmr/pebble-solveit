@@ -1,0 +1,69 @@
+{
+    "author": "Samuel Rinnetm\u00e4ki",
+    "dependencies": {},
+    "keywords": [],
+    "name": "solve-it",
+    "pebble": {
+        "capabilities": [
+            "configurable"
+        ],
+        "displayName": "Solve It",
+        "enableMultiJS": false,
+        "messageKeys": {
+            "add": 2,
+            "divide": 5,
+            "labels": 1,
+            "multiply": 4,
+            "root": 7,
+            "shake": 0,
+            "square": 6,
+            "subtract": 3
+        },
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "characterRegex": "[ehimnorstu]",
+                    "file": "fonts/Roboto-Bold.ttf",
+                    "name": "ROBOTO_14",
+                    "type": "font"
+                },
+                {
+                    "characterRegex": "[0-9+\u00d7\u00f7\u221a\u00b2:\u2212]",
+                    "file": "fonts/Roboto-Bold.ttf",
+                    "name": "ROBOTO_48",
+                    "type": "font"
+                },
+                {
+                    "characterRegex": "[0-9]",
+                    "file": "fonts/Roboto-Bold.ttf",
+                    "name": "ROBOTO_64",
+                    "type": "font"
+                },
+                {
+                    "file": "images/icon.png",
+                    "menuIcon": true,
+                    "name": "IMAGE_MENU_ICON",
+                    "type": "png"
+                },
+                {
+                    "file": "images/logo25.png",
+                    "name": "LOGO",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk"
+        ],
+        "uuid": "3de66e75-c670-4d9d-8e69-65e642114549",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "1.6.0"
+}

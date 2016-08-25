@@ -184,8 +184,8 @@ void in_dropped_handler(AppMessageResult reason, void *context) {
 
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
-  GRect bounds = layer_get_bounds(window_layer);
-
+  // GRect bounds = layer_get_bounds(window_layer);
+  GRect bounds = layer_get_unobstructed_bounds(window_layer);
   eq_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_48));
   clear_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_64));
   label_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_14));
