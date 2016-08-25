@@ -132,7 +132,9 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 void in_received_handler(DictionaryIterator *received, void *context) {
-  Tuple *sht = dict_find(received, SHAKE);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message from phone!");
+
+  Tuple *sht = dict_find(received, MESSAGE_KEY_SHAKE);
   shake = sht->value->int8;
   accel_tap_service_unsubscribe();
   if (shake) {
@@ -143,32 +145,38 @@ void in_received_handler(DictionaryIterator *received, void *context) {
     clear = false;
   }
 
-  Tuple *lt = dict_find(received, LABELS);
-  hide_labels = lt->value->int8 ? false : true;
+  Tuple *lt = dict_find(received, MESSAGE_KEY_LABELS);
+  hide_labels = lt->value->int8 ? false : true; // invert!
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Set hide_labels to: %d", hide_labels);
 
-  Tuple *at = dict_find(received, ADD);
-  add = at->value->int16;
+  Tuple *at = dict_find(received, MESSAGE_KEY_ADD);
+  // add = at->value->int16;
+  add = atoi(at->value->cstring);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Configured add to: %d", add);
 
-  Tuple *st = dict_find(received, SUBTRACT);
-  subtract = st->value->int16;
+  Tuple *st = dict_find(received, MESSAGE_KEY_SUBTRACT);
+  // subtract = st->value->int16;
+  subtract = atoi(st->value->cstring);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Configured subtract to: %d", subtract);
 
-  Tuple *mt = dict_find(received, MULTIPLY);
-  multiply = mt->value->int16;
+  Tuple *mt = dict_find(received, MESSAGE_KEY_MULTIPLY);
+  // multiply = mt->value->int16;
+  multiply = atoi(mt->value->cstring);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Configured multiply to: %d", multiply);
 
-  Tuple *dt = dict_find(received, DIVIDE);
-  divide = dt->value->int16;
+  Tuple *dt = dict_find(received, MESSAGE_KEY_DIVIDE);
+  // divide = dt->value->int16;
+  divide = atoi(dt->value->cstring);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Configured divide to: %d", divide);
 
-  Tuple *sqt = dict_find(received, SQUARE);
-  square = sqt->value->int16;
+  Tuple *sqt = dict_find(received, MESSAGE_KEY_SQUARE);
+  // square = sqt->value->int16;
+  square = atoi(sqt->value->cstring);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Configured square to: %d", square);
 
-  Tuple *rt = dict_find(received, ROOT);
-  root = rt->value->int16;
+  Tuple *rt = dict_find(received, MESSAGE_KEY_ROOT);
+  // root = rt->value->int16;
+  root = atoi(rt->value->cstring);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Configured root to: %d", root);
 
   time_t tm = time(NULL);
@@ -250,14 +258,14 @@ static void window_unload(Window *window) {
 }
 
 static void init(void) {
-  shake = persist_exists(SHAKE) ? persist_read_bool(SHAKE) : true;
-  hide_labels = persist_exists(LABELS) ? persist_read_int(LABELS) : false;
-  add = persist_exists(ADD) ? persist_read_int(ADD) : REGULARLY;
-  subtract = persist_exists(SUBTRACT) ? persist_read_int(SUBTRACT) : REGULARLY;
-  multiply = persist_exists(MULTIPLY) ? persist_read_int(MULTIPLY) : OFTEN;
-  divide = persist_exists(DIVIDE) ? persist_read_int(DIVIDE) : RARELY;
-  square = persist_exists(SQUARE) ? persist_read_int(SQUARE) : OFTEN;
-  root = persist_exists(ROOT) ? persist_read_int(ROOT) : RARELY;
+  shake = persist_exists(MESSAGE_KEY_SHAKE) ? persist_read_bool(MESSAGE_KEY_SHAKE) : true;
+  hide_labels = persist_exists(MESSAGE_KEY_LABELS) ? persist_read_bool(MESSAGE_KEY_LABELS) : false;
+  add = persist_exists(MESSAGE_KEY_ADD) ? persist_read_int(MESSAGE_KEY_ADD) : REGULARLY;
+  subtract = persist_exists(MESSAGE_KEY_SUBTRACT) ? persist_read_int(MESSAGE_KEY_SUBTRACT) : REGULARLY;
+  multiply = persist_exists(MESSAGE_KEY_MULTIPLY) ? persist_read_int(MESSAGE_KEY_MULTIPLY) : OFTEN;
+  divide = persist_exists(MESSAGE_KEY_DIVIDE) ? persist_read_int(MESSAGE_KEY_DIVIDE) : RARELY;
+  square = persist_exists(MESSAGE_KEY_SQUARE) ? persist_read_int(MESSAGE_KEY_SQUARE) : OFTEN;
+  root = persist_exists(MESSAGE_KEY_ROOT) ? persist_read_int(MESSAGE_KEY_ROOT) : RARELY;
   accel_tap_service_subscribe(tap_handler);
   tick_timer_service_subscribe(MINUTE_UNIT, &handle_minute_tick);
   window = window_create();
@@ -270,14 +278,14 @@ static void init(void) {
 }
 
 static void deinit(void) {
-  persist_write_bool(SHAKE, shake);
-  persist_write_bool(LABELS, hide_labels);
-  persist_write_int(ADD, add);
-  persist_write_int(SUBTRACT, subtract);
-  persist_write_int(MULTIPLY, multiply);
-  persist_write_int(DIVIDE, divide);
-  persist_write_int(SQUARE, square);
-  persist_write_int(ROOT, root);
+  persist_write_bool(MESSAGE_KEY_SHAKE, shake);
+  persist_write_bool(MESSAGE_KEY_LABELS, hide_labels);
+  persist_write_int(MESSAGE_KEY_ADD, add);
+  persist_write_int(MESSAGE_KEY_SUBTRACT, subtract);
+  persist_write_int(MESSAGE_KEY_MULTIPLY, multiply);
+  persist_write_int(MESSAGE_KEY_DIVIDE, divide);
+  persist_write_int(MESSAGE_KEY_SQUARE, square);
+  persist_write_int(MESSAGE_KEY_ROOT, root);
   window_destroy(window);
   tick_timer_service_unsubscribe();
   accel_tap_service_unsubscribe();

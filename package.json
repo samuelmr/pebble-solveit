@@ -1,6 +1,8 @@
 {
     "author": "Samuel Rinnetm\u00e4ki",
-    "dependencies": {},
+    "dependencies": {
+        "pebble-clay": "^1.0.2"
+    },
     "keywords": [],
     "name": "solve-it",
     "pebble": {
@@ -8,17 +10,18 @@
             "configurable"
         ],
         "displayName": "Solve It",
-        "enableMultiJS": false,
-        "messageKeys": {
-            "add": 2,
-            "divide": 5,
-            "labels": 1,
-            "multiply": 4,
-            "root": 7,
-            "shake": 0,
-            "square": 6,
-            "subtract": 3
-        },
+        "enableMultiJS": true,
+        "messageKeys": [
+            "SHAKE",
+            "LABELS",
+            "ADD",
+            "SUBTRACT",
+            "MULTIPLY",
+            "DIVIDE",
+            "SQUARE",
+            "ROOT",
+            "MODE"
+        ],
         "projectType": "native",
         "resources": {
             "media": [
@@ -42,13 +45,13 @@
                 },
                 {
                     "file": "images/icon.png",
-                    "menuIcon": true,
                     "name": "IMAGE_MENU_ICON",
                     "type": "png"
                 },
                 {
-                    "file": "images/logo25.png",
-                    "name": "LOGO",
+                    "file": "images/icon25.png",
+                    "menuIcon": true,
+                    "name": "ICON",
                     "targetPlatforms": null,
                     "type": "bitmap"
                 }
@@ -58,12 +61,13 @@
         "targetPlatforms": [
             "aplite",
             "basalt",
-            "chalk"
+            "chalk",
+            "diorite"
         ],
         "uuid": "3de66e75-c670-4d9d-8e69-65e642114549",
         "watchapp": {
             "watchface": true
         }
     },
-    "version": "1.6.0"
+    "version": "1.8.0"
 }
