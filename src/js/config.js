@@ -33,21 +33,21 @@ module.exports = [
         "defaultValue": "custom",
         "label": "Preset mode",
         "options": [
-          { 
-            "label": "Beginner", 
-            "value": "beginner" 
+          {
+            "label": "Beginner",
+            "value": "beginner"
           },
-          { 
+          {
             "label": "Normal",
-            "value": "normal" 
+            "value": "normal"
           },
-          { 
+          {
             "label": "Hard core",
-            "value": "hardcore" 
+            "value": "hardcore"
           },
-          { 
+          {
             "label": "Custom",
-            "value": "custom" 
+            "value": "custom"
           }
         ]
       },
@@ -57,19 +57,19 @@ module.exports = [
         "defaultValue": 3,
         "label": "Add",
         "options": [
-          { 
-            "label": "Never", 
-            "value": 0 
+          {
+            "label": "Never",
+            "value": 0
           },
-          { 
+          {
             "label": "Rarely",
             "value": 1
           },
-          { 
+          {
             "label": "Regularly",
             "value": 3
           },
-          { 
+          {
             "label": "Often",
             "value": 5
           }
@@ -81,19 +81,19 @@ module.exports = [
         "defaultValue": 3,
         "label": "Subtract",
         "options": [
-          { 
-            "label": "Never", 
-            "value": 0 
+          {
+            "label": "Never",
+            "value": 0
           },
-          { 
+          {
             "label": "Rarely",
             "value": 1
           },
-          { 
+          {
             "label": "Regularly",
             "value": 3
           },
-          { 
+          {
             "label": "Often",
             "value": 5
           }
@@ -105,21 +105,21 @@ module.exports = [
         "defaultValue": 5,
         "label": "Multiply",
         "options": [
-          { 
-            "label": "Never", 
-            "value": 0 
+          {
+            "label": "Never",
+            "value": 0
           },
-          { 
+          {
             "label": "Rarely",
-            "value": 1 
+            "value": 1
           },
-          { 
+          {
             "label": "Regularly",
-            "value": 3 
+            "value": 3
           },
-          { 
+          {
             "label": "Often",
-            "value": 5 
+            "value": 5
           }
         ]
       },
@@ -129,21 +129,21 @@ module.exports = [
         "defaultValue": 1,
         "label": "Divide",
         "options": [
-          { 
-            "label": "Never", 
-            "value": 0 
+          {
+            "label": "Never",
+            "value": 0
           },
-          { 
+          {
             "label": "Rarely",
-            "value": 1 
+            "value": 1
           },
-          { 
+          {
             "label": "Regularly",
-            "value": 3 
+            "value": 3
           },
-          { 
+          {
             "label": "Often",
-            "value": 5 
+            "value": 5
           }
         ]
       },
@@ -153,21 +153,21 @@ module.exports = [
         "defaultValue": 5,
         "label": "Square",
         "options": [
-          { 
-            "label": "Never", 
-            "value": 0 
+          {
+            "label": "Never",
+            "value": 0
           },
-          { 
+          {
             "label": "Rarely",
-            "value": 1 
+            "value": 1
           },
-          { 
+          {
             "label": "Regularly",
-            "value": 3 
+            "value": 3
           },
-          { 
+          {
             "label": "Often",
-            "value": 5 
+            "value": 5
           }
         ]
       },
@@ -177,19 +177,19 @@ module.exports = [
         "defaultValue": 1,
         "label": "Square root",
         "options": [
-          { 
-            "label": "Never", 
-            "value": 0 
+          {
+            "label": "Never",
+            "value": 0
           },
-          { 
+          {
             "label": "Rarely",
-            "value": 1 
+            "value": 1
           },
-          { 
+          {
             "label": "Regularly",
-            "value": 3 
+            "value": 3
           },
-          { 
+          {
             "label": "Often",
             "value": 5
           }
