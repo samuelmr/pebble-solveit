@@ -5,3 +5,4 @@ build
 .lock-waf*
 appstore-resources
 .DS_Store
+node_modules
