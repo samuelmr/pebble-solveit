@@ -26,9 +26,9 @@
         "resources": {
             "media": [
                 {
-                    "characterRegex": "[ehimnorstu]",
+                    "characterRegex": "[0-9]",
                     "file": "fonts/Roboto-Bold.ttf",
-                    "name": "ROBOTO_14",
+                    "name": "ROBOTO_64",
                     "type": "font"
                 },
                 {
@@ -38,9 +38,9 @@
                     "type": "font"
                 },
                 {
-                    "characterRegex": "[0-9]",
+                    "characterRegex": "[ehimnorstu]",
                     "file": "fonts/Roboto-Bold.ttf",
-                    "name": "ROBOTO_64",
+                    "name": "ROBOTO_14",
                     "type": "font"
                 },
                 {
