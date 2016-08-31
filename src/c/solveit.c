@@ -94,6 +94,7 @@ static void create_equation(int num, char *eq) {
 }
 
 static void update_time(struct tm* t) {
+
   if (clear) {
     text_layer_set_font(min_layer, clear_font);
     text_layer_set_font(hour_layer, clear_font);
@@ -192,8 +193,7 @@ void in_dropped_handler(AppMessageResult reason, void *context) {
 
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
-  // GRect bounds = layer_get_bounds(window_layer);
-  GRect bounds = layer_get_unobstructed_bounds(window_layer);
+  GRect bounds = layer_get_bounds(window_layer);
   eq_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_48));
   clear_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_64));
   label_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_14));
@@ -247,7 +247,7 @@ static void window_load(Window *window) {
 
   layer_set_hidden(text_layer_get_layer(hour_label_layer), hide_labels ? true : false);
   layer_set_hidden(text_layer_get_layer(min_label_layer), hide_labels ? true : false);
-  
+
 }
 
 static void window_unload(Window *window) {
@@ -255,6 +255,13 @@ static void window_unload(Window *window) {
   text_layer_destroy(min_layer);
   text_layer_destroy(hour_label_layer);
   text_layer_destroy(hour_layer);
+}
+
+static void prv_unobstructed_did_change(GRect bounds, void *context) {
+  layer_set_frame(text_layer_get_layer(hour_layer), (GRect) { .origin = { 0, bounds.size.h/2-62 }, .size = { bounds.size.w, 65 } });
+  layer_set_frame(text_layer_get_layer(hour_label_layer), (GRect) { .origin = { 0, bounds.size.h/2-12 }, .size = { bounds.size.w, 15 } });
+  layer_set_frame(text_layer_get_layer(min_layer), (GRect) { .origin = { 0, bounds.size.h/2-8 }, .size = { bounds.size.w, 65 } });
+  layer_set_frame(text_layer_get_layer(min_label_layer), (GRect) { .origin = { 0, bounds.size.h/2+42 }, .size = { bounds.size.w, 15 } });
 }
 
 static void init(void) {
@@ -275,6 +282,10 @@ static void init(void) {
   });
   const bool animated = true;
   window_stack_push(window, animated);
+  UnobstructedAreaHandlers handlers = {
+    .will_change = prv_unobstructed_did_change,
+  };
+  unobstructed_area_service_subscribe(handlers, NULL);
 }
 
 static void deinit(void) {
