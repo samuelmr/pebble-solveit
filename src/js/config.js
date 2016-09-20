@@ -4,13 +4,27 @@ module.exports = [
     "items": [
       {
         "type": "heading",
-        "defaultValue": "Look and feel"
+        "defaultValue": "Behaviour and look"
       },
       {
-        "type": "toggle",
+        "type": "select",
         "messageKey": "SHAKE",
-        "defaultValue": "true",
-        "label": "Solve by shaking wrist"
+        "defaultValue": 1,
+        "label": "When watch is shaken",
+        "options": [
+          {
+            "label": "Do nothing",
+            "value": 0
+          },
+          {
+            "label": "Solve expressions",
+            "value": 1
+          },
+          {
+            "label": "New expressions",
+            "value": 2
+          }
+        ]
       },
       {
         "type": "toggle",

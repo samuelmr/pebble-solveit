@@ -16,7 +16,7 @@ static GColor clear_bg;
 static GColor clear_text;
 static bool clear = false;
 static bool hide_labels;
-static int shake;
+static int shake = 1; // 0 = nothing, 1 = solve, 2 = new expression
 enum Interval {
   NEVER= 0,
   RARELY = 1,
@@ -120,8 +120,16 @@ static void update_time(struct tm* t) {
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
-  clear = !clear;
-  // APP_LOG(APP_LOG_LEVEL_DEBUG, "Tapped, set clear to %d", (int) clear);
+  if (shake == 0) {
+    // do nothing
+    return;
+  }
+  if (shake == 1) {
+    // toggle between expression and solution
+    clear = !clear;
+    // APP_LOG(APP_LOG_LEVEL_DEBUG, "Tapped, set clear to %d", (int) clear);
+  }
+  // if shake == 2, just create a new expression
   time_t tm = time(NULL);
   struct tm *tms;
   tms = localtime(&tm);
@@ -136,11 +144,13 @@ void in_received_handler(DictionaryIterator *received, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message from phone!");
 
   Tuple *sht = dict_find(received, MESSAGE_KEY_SHAKE);
-  shake = sht->value->int8;
+  // shake = atoi(sht->value->int8);
+  shake = atoi(sht->value->cstring);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Set shake value to: %d", shake);
   accel_tap_service_unsubscribe();
   if (shake) {
     accel_tap_service_subscribe(tap_handler);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Subscribed to accel tap service: %d", shake);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Subscribed to accel tap service");
   }
   else {
     clear = false;
@@ -265,7 +275,7 @@ static void prv_unobstructed_did_change(GRect bounds, void *context) {
 }
 
 static void init(void) {
-  shake = persist_exists(MESSAGE_KEY_SHAKE) ? persist_read_bool(MESSAGE_KEY_SHAKE) : true;
+  shake = persist_exists(MESSAGE_KEY_SHAKE) ? persist_read_int(MESSAGE_KEY_SHAKE) : 1;
   hide_labels = persist_exists(MESSAGE_KEY_LABELS) ? persist_read_bool(MESSAGE_KEY_LABELS) : false;
   add = persist_exists(MESSAGE_KEY_ADD) ? persist_read_int(MESSAGE_KEY_ADD) : REGULARLY;
   subtract = persist_exists(MESSAGE_KEY_SUBTRACT) ? persist_read_int(MESSAGE_KEY_SUBTRACT) : REGULARLY;
@@ -289,7 +299,7 @@ static void init(void) {
 }
 
 static void deinit(void) {
-  persist_write_bool(MESSAGE_KEY_SHAKE, shake);
+  persist_write_int(MESSAGE_KEY_SHAKE, shake);
   persist_write_bool(MESSAGE_KEY_LABELS, hide_labels);
   persist_write_int(MESSAGE_KEY_ADD, add);
   persist_write_int(MESSAGE_KEY_SUBTRACT, subtract);
