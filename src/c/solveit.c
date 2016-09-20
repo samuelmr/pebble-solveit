@@ -5,17 +5,21 @@ static TextLayer *hour_layer;
 static TextLayer *hour_label_layer;
 static TextLayer *min_layer;
 static TextLayer *min_label_layer;
+static TextLayer *step_layer;
 static char min_text[] = "Just a minute";
 static char hour_text[8];
+static char step_text[8];
 static GFont eq_font;
 static GFont clear_font;
 static GFont label_font;
+static GFont step_font;
 static GColor eq_bg;
 static GColor eq_text;
 static GColor clear_bg;
 static GColor clear_text;
 static bool clear = false;
-static bool hide_labels;
+static bool hide_labels = false;
+static bool show_steps = false;
 static int shake = 1; // 0 = nothing, 1 = solve, 2 = new expression
 enum Interval {
   NEVER= 0,
@@ -39,6 +43,7 @@ enum MessageKey {
   SQUARE = 6,
   ROOT = 7
 };
+static const HealthMetric metric = HealthMetricStepCount;
 
 static void create_equation(int num, char *eq) {
   int i = 0;
@@ -95,11 +100,30 @@ static void create_equation(int num, char *eq) {
 
 static void update_time(struct tm* t) {
 
+  int step_count = 0;
+  if (show_steps) {
+    time_t start = time_start_of_today();
+    time_t end = time(NULL);
+    // Check the metric has data available for today
+    HealthServiceAccessibilityMask mask = health_service_metric_accessible(metric, start, end);
+    if(mask & HealthServiceAccessibilityMaskAvailable) {
+      step_count = (int) health_service_sum_today(metric);
+      // Data is available!
+      APP_LOG(APP_LOG_LEVEL_INFO, "Steps today: %d", step_count);
+    } else {
+      // No data recorded yet today
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Data unavailable!");
+    }
+  }
+
   if (clear) {
     text_layer_set_font(min_layer, clear_font);
     text_layer_set_font(hour_layer, clear_font);
     snprintf(hour_text, sizeof(hour_text), "%d", t->tm_hour);
     snprintf(min_text, sizeof(min_text), "%02d", t->tm_min);
+    if (show_steps && (step_count > 0)) {
+      snprintf(step_text, sizeof(step_text), "%d", step_count);
+    }
   }
   else {
     text_layer_set_font(min_layer, eq_font);
@@ -107,16 +131,23 @@ static void update_time(struct tm* t) {
     create_equation(t->tm_hour, hour_text);
     create_equation(t->tm_min, min_text);
     // APP_LOG(APP_LOG_LEVEL_DEBUG, "Got %s and %s from %d and %d", hour_text, min_text, t->tm_hour, t->tm_min);
+    if (show_steps && (step_count > 0)) {
+      create_equation(step_count, step_text);
+    }
   }
   window_set_background_color(window, clear ? clear_bg : eq_bg);
   text_layer_set_text_color(hour_layer, clear ? clear_text : eq_text);
   text_layer_set_text_color(min_layer, clear ? clear_text : eq_text);
+  text_layer_set_text_color(step_layer, clear ? clear_text : eq_text);
 
   layer_set_hidden(text_layer_get_layer(hour_label_layer), (clear || hide_labels) ? true : false);
   layer_set_hidden(text_layer_get_layer(min_label_layer), (clear || hide_labels) ? true : false);
 
   text_layer_set_text(min_layer, min_text);
   text_layer_set_text(hour_layer, hour_text);
+  text_layer_set_text(step_layer, step_text);
+
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Clear: %s (%d), steps: %d, show_steps: %d, hide_labels: %d, shake: %d", (clear ? "true" : "false"), clear, step_count, show_steps, hide_labels, shake);
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
@@ -127,7 +158,7 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
   if (shake == 1) {
     // toggle between expression and solution
     clear = !clear;
-    // APP_LOG(APP_LOG_LEVEL_DEBUG, "Tapped, set clear to %d", (int) clear);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Tapped, set clear to %d", (int) clear);
   }
   // if shake == 2, just create a new expression
   time_t tm = time(NULL);
@@ -154,11 +185,16 @@ void in_received_handler(DictionaryIterator *received, void *context) {
   }
   else {
     clear = false;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Making sure no solution is shown: %d", clear);
   }
 
   Tuple *lt = dict_find(received, MESSAGE_KEY_LABELS);
   hide_labels = lt->value->int8 ? false : true; // invert!
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Set hide_labels to: %d", hide_labels);
+
+  Tuple *ht = dict_find(received, MESSAGE_KEY_STEPS);
+  show_steps = ht->value->int8 ? true : false;
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Set show_steps to: %d", show_steps);
 
   Tuple *at = dict_find(received, MESSAGE_KEY_ADD);
   // add = at->value->int16;
@@ -207,6 +243,7 @@ static void window_load(Window *window) {
   eq_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_48));
   clear_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_64));
   label_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_14));
+  step_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_14));
 
   app_message_register_inbox_received(in_received_handler);
   app_message_register_inbox_dropped(in_dropped_handler);
@@ -258,9 +295,17 @@ static void window_load(Window *window) {
   layer_set_hidden(text_layer_get_layer(hour_label_layer), hide_labels ? true : false);
   layer_set_hidden(text_layer_get_layer(min_label_layer), hide_labels ? true : false);
 
+  step_layer = text_layer_create((GRect) { .origin = { 0, 1 }, .size = { bounds.size.w, 15 } });
+  text_layer_set_font(step_layer, step_font);
+  text_layer_set_text(step_layer, step_text);
+  text_layer_set_background_color(step_layer, GColorClear);
+  text_layer_set_text_alignment(step_layer, GTextAlignmentCenter);
+  layer_add_child(window_layer, text_layer_get_layer(step_layer));
+
 }
 
 static void window_unload(Window *window) {
+  text_layer_destroy(step_layer);
   text_layer_destroy(min_label_layer);
   text_layer_destroy(min_layer);
   text_layer_destroy(hour_label_layer);
@@ -272,11 +317,22 @@ static void prv_unobstructed_did_change(GRect bounds, void *context) {
   layer_set_frame(text_layer_get_layer(hour_label_layer), (GRect) { .origin = { 0, bounds.size.h/2-12 }, .size = { bounds.size.w, 15 } });
   layer_set_frame(text_layer_get_layer(min_layer), (GRect) { .origin = { 0, bounds.size.h/2-8 }, .size = { bounds.size.w, 65 } });
   layer_set_frame(text_layer_get_layer(min_label_layer), (GRect) { .origin = { 0, bounds.size.h/2+42 }, .size = { bounds.size.w, 15 } });
+  int step_bottom = bounds.size.h/2-62;
+  if (step_bottom > 15) {
+    layer_set_frame(text_layer_get_layer(step_layer), (GRect) { .origin = { 0, step_bottom-15 }, .size = { bounds.size.w, 15 } });
+    layer_set_hidden(text_layer_get_layer(step_layer), false);
+  }
+  else {
+    layer_set_hidden(text_layer_get_layer(step_layer), true);
+  }
 }
 
 static void init(void) {
+  clear = false;
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Inifializing, clear: %d", clear);
   shake = persist_exists(MESSAGE_KEY_SHAKE) ? persist_read_int(MESSAGE_KEY_SHAKE) : 1;
   hide_labels = persist_exists(MESSAGE_KEY_LABELS) ? persist_read_bool(MESSAGE_KEY_LABELS) : false;
+  show_steps = persist_exists(MESSAGE_KEY_STEPS) ? persist_read_bool(MESSAGE_KEY_STEPS) : false;
   add = persist_exists(MESSAGE_KEY_ADD) ? persist_read_int(MESSAGE_KEY_ADD) : REGULARLY;
   subtract = persist_exists(MESSAGE_KEY_SUBTRACT) ? persist_read_int(MESSAGE_KEY_SUBTRACT) : REGULARLY;
   multiply = persist_exists(MESSAGE_KEY_MULTIPLY) ? persist_read_int(MESSAGE_KEY_MULTIPLY) : OFTEN;
@@ -301,6 +357,7 @@ static void init(void) {
 static void deinit(void) {
   persist_write_int(MESSAGE_KEY_SHAKE, shake);
   persist_write_bool(MESSAGE_KEY_LABELS, hide_labels);
+  persist_write_bool(MESSAGE_KEY_STEPS, show_steps);
   persist_write_int(MESSAGE_KEY_ADD, add);
   persist_write_int(MESSAGE_KEY_SUBTRACT, subtract);
   persist_write_int(MESSAGE_KEY_MULTIPLY, multiply);

@@ -31,6 +31,12 @@ module.exports = [
         "messageKey": "LABELS",
         "defaultValue": "true",
         "label": "Show labels"
+      },
+      {
+        "type": "toggle",
+        "messageKey": "STEPS",
+        "defaultValue": "false",
+        "label": "Show daily step count"
       }
     ]
   },

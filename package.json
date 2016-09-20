@@ -1,5 +1,5 @@
 {
-    "author": "Samuel Rinnetm\u00e4ki",
+    "author": "Samuel Rinnetmäki",
     "dependencies": {
         "pebble-clay": "^1.0.2"
     },
@@ -7,7 +7,8 @@
     "name": "solve-it",
     "pebble": {
         "capabilities": [
-            "configurable"
+            "configurable",
+            "health"
         ],
         "displayName": "Solve It",
         "enableMultiJS": true,
@@ -20,7 +21,8 @@
             "DIVIDE",
             "SQUARE",
             "ROOT",
-            "MODE"
+            "MODE",
+            "STEPS"
         ],
         "projectType": "native",
         "resources": {
@@ -69,5 +71,5 @@
             "watchface": true
         }
     },
-    "version": "2.1.0"
+    "version": "2.2.0"
 }
