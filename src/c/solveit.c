@@ -1,4 +1,6 @@
 #include <pebble.h>
+#define STR_MAX_LEN 12
+#define STEP_LAYER_HEIGHT 15
 
 static Window *window;
 static TextLayer *hour_layer;
@@ -7,8 +9,8 @@ static TextLayer *min_layer;
 static TextLayer *min_label_layer;
 static TextLayer *step_layer;
 static char min_text[] = "Just a minute";
-static char hour_text[8];
-static char step_text[8];
+static char hour_text[STR_MAX_LEN];
+static char step_text[STR_MAX_LEN];
 static GFont eq_font;
 static GFont clear_font;
 static GFont label_font;
@@ -18,9 +20,9 @@ static GColor eq_text;
 static GColor clear_bg;
 static GColor clear_text;
 static bool clear = false;
-static bool hide_labels = false;
-static bool show_steps = false;
-static int shake = 1; // 0 = nothing, 1 = solve, 2 = new expression
+static bool hide_labels;
+static bool show_steps;
+static int shake; // 0 = nothing, 1 = solve, 2 = new expression
 enum Interval {
   NEVER= 0,
   RARELY = 1,
@@ -53,7 +55,7 @@ static void create_equation(int num, char *eq) {
   // APP_LOG(APP_LOG_LEVEL_DEBUG, "Num: %d, Op: %d (add %d, sub %d, div %d, mul %d, sq %d, root %d)", num, op, add, subtract, divide, multiply, square, root);
   if (root && (op >= all - root)) {
     if (num > 0) {
-      snprintf(eq, 20, "√%d", num*num);
+      snprintf(eq, STR_MAX_LEN, "√%d", num*num);
       return;
     }
   }
@@ -61,7 +63,7 @@ static void create_equation(int num, char *eq) {
     for (i=2; i<7; i++) {
       // square (num can be square rooted exactly)
       if (num == i*i) {
-        snprintf(eq, 20, "%d²", i);
+        snprintf(eq, STR_MAX_LEN, "%d²", i);
         return;
       }
     }
@@ -70,7 +72,7 @@ static void create_equation(int num, char *eq) {
   if (multiply && (op >= add + subtract + divide)) {
     for (i=2; i<8; i++) {
       if ((num != i) && (num % i == 0))  {
-        snprintf(eq, 20, "%d×%d", (int) num/i, i);
+        snprintf(eq, STR_MAX_LEN, "%d×%d", (int) num/i, i);
         return;
       }
     }
@@ -78,28 +80,27 @@ static void create_equation(int num, char *eq) {
   }
   if (divide && (op >= add + subtract)) {
     i = (rand() % 5) + 2;
-    snprintf(eq, 20, "%d÷%d", num*i, i);
+    snprintf(eq, STR_MAX_LEN, "%d÷%d", num*i, i);
     return;
   }
   if (subtract && (op >= add)) {
     i = (rand() % 22) + 1;
-    snprintf(eq, 20, "%d−%d", num+i, i);
+    snprintf(eq, STR_MAX_LEN, "%d−%d", num+i, i);
     return;
   }
   if (add) {
     if (num > 2) {
       i = (rand() % num - 2) + 2;
-      snprintf(eq, 20, "%d+%d", num-i, i);
+      snprintf(eq, STR_MAX_LEN, "%d+%d", num-i, i);
       return;
     }
   }
   // still here? (e.g. multiply chosen but not possible) - let's retry
   create_equation(num, eq);
-  // APP_LOG(APP_LOG_LEVEL_DEBUG, "No suitable op, retrying");
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "No suitable op, retrying");
 }
 
 static void update_time(struct tm* t) {
-
   int step_count = 0;
   if (show_steps) {
     time_t start = time_start_of_today();
@@ -132,7 +133,8 @@ static void update_time(struct tm* t) {
     create_equation(t->tm_min, min_text);
     // APP_LOG(APP_LOG_LEVEL_DEBUG, "Got %s and %s from %d and %d", hour_text, min_text, t->tm_hour, t->tm_min);
     if (show_steps && (step_count > 0)) {
-      create_equation(step_count, step_text);
+      // create_equation(step_count, step_text);
+      snprintf(step_text, sizeof(step_text), "%d", step_count);
     }
   }
   window_set_background_color(window, clear ? clear_bg : eq_bg);
@@ -147,7 +149,7 @@ static void update_time(struct tm* t) {
   text_layer_set_text(hour_layer, hour_text);
   text_layer_set_text(step_layer, step_text);
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Clear: %s (%d), steps: %d, show_steps: %d, hide_labels: %d, shake: %d", (clear ? "true" : "false"), clear, step_count, show_steps, hide_labels, shake);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Clear: %d, steps: %d, show_steps: %d, hide_labels: %d, shake: %d", clear, step_count, show_steps, hide_labels, shake);
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
@@ -158,7 +160,6 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
   if (shake == 1) {
     // toggle between expression and solution
     clear = !clear;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Tapped, set clear to %d", (int) clear);
   }
   // if shake == 2, just create a new expression
   time_t tm = time(NULL);
@@ -185,7 +186,6 @@ void in_received_handler(DictionaryIterator *received, void *context) {
   }
   else {
     clear = false;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Making sure no solution is shown: %d", clear);
   }
 
   Tuple *lt = dict_find(received, MESSAGE_KEY_LABELS);
@@ -295,9 +295,10 @@ static void window_load(Window *window) {
   layer_set_hidden(text_layer_get_layer(hour_label_layer), hide_labels ? true : false);
   layer_set_hidden(text_layer_get_layer(min_label_layer), hide_labels ? true : false);
 
-  step_layer = text_layer_create((GRect) { .origin = { 0, 1 }, .size = { bounds.size.w, 15 } });
+  step_layer = text_layer_create((GRect) { .origin = { 0, 1 }, .size = { bounds.size.w, STEP_LAYER_HEIGHT } });
   text_layer_set_font(step_layer, step_font);
-  text_layer_set_text(step_layer, step_text);
+  text_layer_set_text(step_layer, "STEPS");
+  text_layer_set_text_color(step_layer, eq_text);
   text_layer_set_background_color(step_layer, GColorClear);
   text_layer_set_text_alignment(step_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(step_layer));
@@ -318,18 +319,18 @@ static void prv_unobstructed_did_change(GRect bounds, void *context) {
   layer_set_frame(text_layer_get_layer(min_layer), (GRect) { .origin = { 0, bounds.size.h/2-8 }, .size = { bounds.size.w, 65 } });
   layer_set_frame(text_layer_get_layer(min_label_layer), (GRect) { .origin = { 0, bounds.size.h/2+42 }, .size = { bounds.size.w, 15 } });
   int step_bottom = bounds.size.h/2-62;
-  if (step_bottom > 15) {
-    layer_set_frame(text_layer_get_layer(step_layer), (GRect) { .origin = { 0, step_bottom-15 }, .size = { bounds.size.w, 15 } });
+  APP_LOG(APP_LOG_LEVEL_INFO, "Step bottom is %d", step_bottom);
+  if (step_bottom > STEP_LAYER_HEIGHT) {
+    layer_set_frame(text_layer_get_layer(step_layer), (GRect) { .origin = { 0, step_bottom-STEP_LAYER_HEIGHT }, .size = { bounds.size.w, STEP_LAYER_HEIGHT } });
     layer_set_hidden(text_layer_get_layer(step_layer), false);
   }
   else {
+    APP_LOG(APP_LOG_LEVEL_INFO, "No room for step count, missing %d px", step_bottom-STEP_LAYER_HEIGHT);
     layer_set_hidden(text_layer_get_layer(step_layer), true);
   }
 }
 
 static void init(void) {
-  clear = false;
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Inifializing, clear: %d", clear);
   shake = persist_exists(MESSAGE_KEY_SHAKE) ? persist_read_int(MESSAGE_KEY_SHAKE) : 1;
   hide_labels = persist_exists(MESSAGE_KEY_LABELS) ? persist_read_bool(MESSAGE_KEY_LABELS) : false;
   show_steps = persist_exists(MESSAGE_KEY_STEPS) ? persist_read_bool(MESSAGE_KEY_STEPS) : false;
