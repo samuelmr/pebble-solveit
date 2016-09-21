@@ -40,7 +40,7 @@
                     "type": "font"
                 },
                 {
-                    "characterRegex": "[ehimnorstu]",
+                    "characterRegex": "[0-9+\u00d7\u00f7\u221a\u00b2:\u2212ehimnorstu]",
                     "file": "fonts/Roboto-Bold.ttf",
                     "name": "ROBOTO_14",
                     "type": "font"

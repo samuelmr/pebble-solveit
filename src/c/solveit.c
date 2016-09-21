@@ -8,7 +8,7 @@ static TextLayer *hour_label_layer;
 static TextLayer *min_layer;
 static TextLayer *min_label_layer;
 static TextLayer *step_layer;
-static char min_text[] = "Just a minute";
+static char min_text[STR_MAX_LEN];
 static char hour_text[STR_MAX_LEN];
 static char step_text[STR_MAX_LEN];
 static GFont eq_font;
@@ -54,7 +54,8 @@ static void create_equation(int num, char *eq) {
   int op = rand() % all;
   // APP_LOG(APP_LOG_LEVEL_DEBUG, "Num: %d, Op: %d (add %d, sub %d, div %d, mul %d, sq %d, root %d)", num, op, add, subtract, divide, multiply, square, root);
   if (root && (op >= all - root)) {
-    if (num > 0) {
+    // don't show roots of very large numbers (steps)
+    if ((num > 0) && (num <= 100)) {
       snprintf(eq, STR_MAX_LEN, "√%d", num*num);
       return;
     }
@@ -123,7 +124,7 @@ static void update_time(struct tm* t) {
     snprintf(hour_text, sizeof(hour_text), "%d", t->tm_hour);
     snprintf(min_text, sizeof(min_text), "%02d", t->tm_min);
     if (show_steps && (step_count > 0)) {
-      snprintf(step_text, sizeof(step_text), "%d", step_count);
+      snprintf(step_text, STR_MAX_LEN, "%d", step_count);
     }
   }
   else {
@@ -133,8 +134,7 @@ static void update_time(struct tm* t) {
     create_equation(t->tm_min, min_text);
     // APP_LOG(APP_LOG_LEVEL_DEBUG, "Got %s and %s from %d and %d", hour_text, min_text, t->tm_hour, t->tm_min);
     if (show_steps && (step_count > 0)) {
-      // create_equation(step_count, step_text);
-      snprintf(step_text, sizeof(step_text), "%d", step_count);
+      create_equation(step_count, step_text);
     }
   }
   window_set_background_color(window, clear ? clear_bg : eq_bg);
@@ -236,7 +236,6 @@ void in_dropped_handler(AppMessageResult reason, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Message from phone dropped: %d", reason);
 }
 
-
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_unobstructed_bounds(window_layer);
@@ -297,7 +296,7 @@ static void window_load(Window *window) {
 
   step_layer = text_layer_create((GRect) { .origin = { 0, 1 }, .size = { bounds.size.w, STEP_LAYER_HEIGHT } });
   text_layer_set_font(step_layer, step_font);
-  text_layer_set_text(step_layer, "STEPS");
+  text_layer_set_text(step_layer, step_text);
   text_layer_set_text_color(step_layer, eq_text);
   text_layer_set_background_color(step_layer, GColorClear);
   text_layer_set_text_alignment(step_layer, GTextAlignmentCenter);
@@ -321,7 +320,7 @@ static void prv_unobstructed_did_change(GRect bounds, void *context) {
   int step_bottom = bounds.size.h/2-62;
   APP_LOG(APP_LOG_LEVEL_INFO, "Step bottom is %d", step_bottom);
   if (step_bottom > STEP_LAYER_HEIGHT) {
-    layer_set_frame(text_layer_get_layer(step_layer), (GRect) { .origin = { 0, step_bottom-STEP_LAYER_HEIGHT }, .size = { bounds.size.w, STEP_LAYER_HEIGHT } });
+    layer_set_frame(text_layer_get_layer(step_layer), (GRect) { .origin = { 0, 1 }, .size = { bounds.size.w, STEP_LAYER_HEIGHT } });
     layer_set_hidden(text_layer_get_layer(step_layer), false);
   }
   else {
