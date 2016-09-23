@@ -37,6 +37,18 @@ module.exports = [
         "messageKey": "STEPS",
         "defaultValue": "false",
         "label": "Show daily step count"
+      },
+      {
+        "type": "toggle",
+        "messageKey": "DAY",
+        "defaultValue": "false",
+        "label": "Show day of month"
+      },
+      {
+        "type": "toggle",
+        "messageKey": "MONTH",
+        "defaultValue": "false",
+        "label": "Show month"
       }
     ]
   },

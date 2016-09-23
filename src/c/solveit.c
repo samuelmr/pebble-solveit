@@ -1,6 +1,7 @@
 #include <pebble.h>
 #define STR_MAX_LEN 12
 #define STEP_LAYER_HEIGHT 15
+#define DATE_LAYER_HEIGHT 15
 
 static Window *window;
 static TextLayer *hour_layer;
@@ -8,21 +9,28 @@ static TextLayer *hour_label_layer;
 static TextLayer *min_layer;
 static TextLayer *min_label_layer;
 static TextLayer *step_layer;
+static TextLayer *day_layer;
 static char min_text[STR_MAX_LEN];
 static char hour_text[STR_MAX_LEN];
 static char step_text[STR_MAX_LEN];
+static char day_text[STR_MAX_LEN];
+static TextLayer *month_layer;
+static char month_text[STR_MAX_LEN];
 static GFont eq_font;
 static GFont clear_font;
 static GFont label_font;
 static GFont step_font;
+static GFont date_font;
 static GColor eq_bg;
 static GColor eq_text;
 static GColor clear_bg;
 static GColor clear_text;
+static int shake; // 0 = nothing, 1 = solve, 2 = new expression
 static bool clear = false;
 static bool hide_labels;
 static bool show_steps;
-static int shake; // 0 = nothing, 1 = solve, 2 = new expression
+static bool show_day;
+static bool show_month;
 enum Interval {
   NEVER= 0,
   RARELY = 1,
@@ -123,6 +131,8 @@ static void update_time(struct tm* t) {
     text_layer_set_font(hour_layer, clear_font);
     snprintf(hour_text, sizeof(hour_text), "%d", t->tm_hour);
     snprintf(min_text, sizeof(min_text), "%02d", t->tm_min);
+    snprintf(day_text, sizeof(day_text), "%d", t->tm_mday);
+    snprintf(month_text, sizeof(min_text), "%d", t->tm_mon + 1);
     if (show_steps && (step_count > 0)) {
       snprintf(step_text, STR_MAX_LEN, "%d", step_count);
     }
@@ -132,6 +142,8 @@ static void update_time(struct tm* t) {
     text_layer_set_font(hour_layer, eq_font);
     create_equation(t->tm_hour, hour_text);
     create_equation(t->tm_min, min_text);
+    create_equation(t->tm_mday, day_text);
+    create_equation(t->tm_mon + 1, month_text);
     // APP_LOG(APP_LOG_LEVEL_DEBUG, "Got %s and %s from %d and %d", hour_text, min_text, t->tm_hour, t->tm_min);
     if (show_steps && (step_count > 0)) {
       create_equation(step_count, step_text);
@@ -141,15 +153,21 @@ static void update_time(struct tm* t) {
   text_layer_set_text_color(hour_layer, clear ? clear_text : eq_text);
   text_layer_set_text_color(min_layer, clear ? clear_text : eq_text);
   text_layer_set_text_color(step_layer, clear ? clear_text : eq_text);
+  text_layer_set_text_color(day_layer, clear ? clear_text : eq_text);
+  text_layer_set_text_color(month_layer, clear ? clear_text : eq_text);
 
   layer_set_hidden(text_layer_get_layer(hour_label_layer), (clear || hide_labels) ? true : false);
   layer_set_hidden(text_layer_get_layer(min_label_layer), (clear || hide_labels) ? true : false);
+  layer_set_hidden(text_layer_get_layer(step_layer), !show_steps);
+  layer_set_hidden(text_layer_get_layer(month_layer), PBL_IF_ROUND_ELSE(true, !show_month));
+  layer_set_hidden(text_layer_get_layer(day_layer), !show_day);
 
   text_layer_set_text(min_layer, min_text);
   text_layer_set_text(hour_layer, hour_text);
   text_layer_set_text(step_layer, step_text);
+  text_layer_set_text(day_layer, day_text);
+  text_layer_set_text(month_layer, month_text);
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Clear: %d, steps: %d, show_steps: %d, hide_labels: %d, shake: %d", clear, step_count, show_steps, hide_labels, shake);
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
@@ -195,6 +213,14 @@ void in_received_handler(DictionaryIterator *received, void *context) {
   Tuple *ht = dict_find(received, MESSAGE_KEY_STEPS);
   show_steps = ht->value->int8 ? true : false;
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Set show_steps to: %d", show_steps);
+
+  Tuple *dayt = dict_find(received, MESSAGE_KEY_DAY);
+  show_day = dayt->value->int8 ? true : false;
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Set show_day to: %d", show_day);
+
+  Tuple *montht = dict_find(received, MESSAGE_KEY_MONTH);
+  show_month = montht->value->int8 ? true : false;
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Set show_month to: %d", show_month);
 
   Tuple *at = dict_find(received, MESSAGE_KEY_ADD);
   // add = at->value->int16;
@@ -242,7 +268,8 @@ static void window_load(Window *window) {
   eq_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_48));
   clear_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_64));
   label_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_14));
-  step_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_14));
+  step_font = label_font;
+  date_font = step_font;
 
   app_message_register_inbox_received(in_received_handler);
   app_message_register_inbox_dropped(in_dropped_handler);
@@ -261,14 +288,14 @@ static void window_load(Window *window) {
   clear_text = GColorBlack;
 #endif
 
-  hour_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2-62 }, .size = { bounds.size.w, 65 } });
+  hour_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2-72 }, .size = { bounds.size.w, 65 } });
   text_layer_set_font(hour_layer, eq_font);
   text_layer_set_text(hour_layer, hour_text);
   text_layer_set_background_color(hour_layer, GColorClear);
   text_layer_set_text_alignment(hour_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(hour_layer));
 
-  hour_label_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2-12 }, .size = { bounds.size.w, 15 } });
+  hour_label_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2-22 }, .size = { bounds.size.w, 15 } });
   text_layer_set_font(hour_label_layer, label_font);
   text_layer_set_text(hour_label_layer, "hours");
   text_layer_set_background_color(hour_label_layer, GColorClear);
@@ -276,14 +303,14 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(hour_label_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(hour_label_layer));
 
-  min_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2+3 }, .size = { bounds.size.w, 65 } });
+  min_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2-7 }, .size = { bounds.size.w, 65 } });
   text_layer_set_font(min_layer, eq_font);
   text_layer_set_text(min_layer, min_text);
   text_layer_set_background_color(min_layer, GColorClear);
   text_layer_set_text_alignment(min_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(min_layer));
 
-  min_label_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2+53 }, .size = { bounds.size.w, 15 } });
+  min_label_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2+43 }, .size = { bounds.size.w, 15 } });
   text_layer_set_font(min_label_layer, label_font);
   text_layer_set_text(min_label_layer, "minutes");
   text_layer_set_background_color(min_label_layer, GColorClear);
@@ -302,10 +329,28 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(step_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(step_layer));
 
+  day_layer = text_layer_create((GRect) { .origin = { PBL_IF_ROUND_ELSE(0, bounds.size.w/2), bounds.size.h-1-DATE_LAYER_HEIGHT }, .size = { PBL_IF_ROUND_ELSE(bounds.size.w, bounds.size.w/2), DATE_LAYER_HEIGHT } });
+  text_layer_set_font(day_layer, date_font);
+  text_layer_set_text(day_layer, day_text);
+  text_layer_set_text_color(day_layer, eq_text);
+  text_layer_set_background_color(day_layer, GColorClear);
+  text_layer_set_text_alignment(day_layer, GTextAlignmentCenter);
+  layer_add_child(window_layer, text_layer_get_layer(day_layer));
+
+  month_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h-1-DATE_LAYER_HEIGHT }, .size = { bounds.size.w/2, DATE_LAYER_HEIGHT } });
+  text_layer_set_font(month_layer, date_font);
+  text_layer_set_text(month_layer, month_text);
+  text_layer_set_text_color(month_layer, eq_text);
+  text_layer_set_background_color(month_layer, GColorClear);
+  text_layer_set_text_alignment(month_layer, GTextAlignmentCenter);
+  layer_add_child(window_layer, text_layer_get_layer(month_layer));
+
 }
 
 static void window_unload(Window *window) {
   text_layer_destroy(step_layer);
+  text_layer_destroy(day_layer);
+  text_layer_destroy(month_layer);
   text_layer_destroy(min_label_layer);
   text_layer_destroy(min_layer);
   text_layer_destroy(hour_label_layer);
@@ -327,12 +372,27 @@ static void prv_unobstructed_did_change(GRect bounds, void *context) {
     APP_LOG(APP_LOG_LEVEL_INFO, "No room for step count, missing %d px", step_bottom-STEP_LAYER_HEIGHT);
     layer_set_hidden(text_layer_get_layer(step_layer), true);
   }
+
+  int date_top = bounds.size.h/2+57;
+  APP_LOG(APP_LOG_LEVEL_INFO, "Date top is %d", date_top);
+  if (date_top + DATE_LAYER_HEIGHT < bounds.size.h) {
+    layer_set_frame(text_layer_get_layer(day_layer), (GRect) { .origin = { PBL_IF_ROUND_ELSE(0, bounds.size.w/2), 1 }, .size = { bounds.size.w, DATE_LAYER_HEIGHT } });
+    layer_set_hidden(text_layer_get_layer(day_layer), false);
+    layer_set_hidden(text_layer_get_layer(month_layer), false);
+  }
+  else {
+    APP_LOG(APP_LOG_LEVEL_INFO, "No room for day and month, missing %d px", date_top + DATE_LAYER_HEIGHT - bounds.size.h);
+    layer_set_hidden(text_layer_get_layer(day_layer), true);
+    layer_set_hidden(text_layer_get_layer(month_layer), true);
+  }
 }
 
 static void init(void) {
   shake = persist_exists(MESSAGE_KEY_SHAKE) ? persist_read_int(MESSAGE_KEY_SHAKE) : 1;
   hide_labels = persist_exists(MESSAGE_KEY_LABELS) ? persist_read_bool(MESSAGE_KEY_LABELS) : false;
   show_steps = persist_exists(MESSAGE_KEY_STEPS) ? persist_read_bool(MESSAGE_KEY_STEPS) : false;
+  show_day = persist_exists(MESSAGE_KEY_DAY) ? persist_read_bool(MESSAGE_KEY_DAY) : false;
+  show_month = persist_exists(MESSAGE_KEY_MONTH) ? persist_read_bool(MESSAGE_KEY_MONTH) : false;
   add = persist_exists(MESSAGE_KEY_ADD) ? persist_read_int(MESSAGE_KEY_ADD) : REGULARLY;
   subtract = persist_exists(MESSAGE_KEY_SUBTRACT) ? persist_read_int(MESSAGE_KEY_SUBTRACT) : REGULARLY;
   multiply = persist_exists(MESSAGE_KEY_MULTIPLY) ? persist_read_int(MESSAGE_KEY_MULTIPLY) : OFTEN;
@@ -358,6 +418,8 @@ static void deinit(void) {
   persist_write_int(MESSAGE_KEY_SHAKE, shake);
   persist_write_bool(MESSAGE_KEY_LABELS, hide_labels);
   persist_write_bool(MESSAGE_KEY_STEPS, show_steps);
+  persist_write_bool(MESSAGE_KEY_DAY, show_day);
+  persist_write_bool(MESSAGE_KEY_MONTH, show_month);
   persist_write_int(MESSAGE_KEY_ADD, add);
   persist_write_int(MESSAGE_KEY_SUBTRACT, subtract);
   persist_write_int(MESSAGE_KEY_MULTIPLY, multiply);
