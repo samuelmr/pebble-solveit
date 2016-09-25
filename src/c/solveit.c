@@ -1,6 +1,9 @@
 #include <pebble.h>
 #define STR_MAX_LEN 12
 #define STEP_LAYER_HEIGHT 15
+#define TIME_LAYER_HEIGHT 50
+#define TIME_LAYER_OFFSET 6
+#define LABEL_LAYER_HEIGHT 12
 #define DATE_LAYER_HEIGHT 15
 
 static Window *window;
@@ -288,14 +291,15 @@ static void window_load(Window *window) {
   clear_text = GColorBlack;
 #endif
 
-  hour_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2-72 }, .size = { bounds.size.w, 65 } });
+  int hour_top = bounds.size.h/2 - TIME_LAYER_HEIGHT - LABEL_LAYER_HEIGHT - TIME_LAYER_OFFSET;
+  hour_layer = text_layer_create((GRect) { .origin = { 0, hour_top }, .size = { bounds.size.w, 65 } });
   text_layer_set_font(hour_layer, eq_font);
   text_layer_set_text(hour_layer, hour_text);
   text_layer_set_background_color(hour_layer, GColorClear);
   text_layer_set_text_alignment(hour_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(hour_layer));
 
-  hour_label_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2-22 }, .size = { bounds.size.w, 15 } });
+  hour_label_layer = text_layer_create((GRect) { .origin = { 0, hour_top + TIME_LAYER_HEIGHT}, .size = { bounds.size.w, 15 } });
   text_layer_set_font(hour_label_layer, label_font);
   text_layer_set_text(hour_label_layer, "hours");
   text_layer_set_background_color(hour_label_layer, GColorClear);
@@ -303,14 +307,15 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(hour_label_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(hour_label_layer));
 
-  min_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2-7 }, .size = { bounds.size.w, 65 } });
+  int min_top = hour_top + TIME_LAYER_HEIGHT + LABEL_LAYER_HEIGHT + TIME_LAYER_OFFSET/2;
+  min_layer = text_layer_create((GRect) { .origin = { 0, min_top }, .size = { bounds.size.w, 65 } });
   text_layer_set_font(min_layer, eq_font);
   text_layer_set_text(min_layer, min_text);
   text_layer_set_background_color(min_layer, GColorClear);
   text_layer_set_text_alignment(min_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(min_layer));
 
-  min_label_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h/2+43 }, .size = { bounds.size.w, 15 } });
+  min_label_layer = text_layer_create((GRect) { .origin = { 0, min_top + TIME_LAYER_HEIGHT }, .size = { bounds.size.w, 15 } });
   text_layer_set_font(min_label_layer, label_font);
   text_layer_set_text(min_label_layer, "minutes");
   text_layer_set_background_color(min_label_layer, GColorClear);
@@ -329,7 +334,8 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(step_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(step_layer));
 
-  day_layer = text_layer_create((GRect) { .origin = { PBL_IF_ROUND_ELSE(0, bounds.size.w/2), bounds.size.h-1-DATE_LAYER_HEIGHT }, .size = { PBL_IF_ROUND_ELSE(bounds.size.w, bounds.size.w/2), DATE_LAYER_HEIGHT } });
+  int date_top = bounds.size.h - DATE_LAYER_HEIGHT - PBL_IF_ROUND_ELSE(4, 1);
+  day_layer = text_layer_create((GRect) { .origin = { PBL_IF_ROUND_ELSE(0, bounds.size.w/2), date_top }, .size = { PBL_IF_ROUND_ELSE(bounds.size.w, bounds.size.w/2), DATE_LAYER_HEIGHT } });
   text_layer_set_font(day_layer, date_font);
   text_layer_set_text(day_layer, day_text);
   text_layer_set_text_color(day_layer, eq_text);
@@ -337,7 +343,7 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(day_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(day_layer));
 
-  month_layer = text_layer_create((GRect) { .origin = { 0, bounds.size.h-1-DATE_LAYER_HEIGHT }, .size = { bounds.size.w/2, DATE_LAYER_HEIGHT } });
+  month_layer = text_layer_create((GRect) { .origin = { 0, date_top }, .size = { bounds.size.w/2, DATE_LAYER_HEIGHT } });
   text_layer_set_font(month_layer, date_font);
   text_layer_set_text(month_layer, month_text);
   text_layer_set_text_color(month_layer, eq_text);
@@ -358,14 +364,25 @@ static void window_unload(Window *window) {
 }
 
 static void prv_unobstructed_did_change(GRect bounds, void *context) {
-  layer_set_frame(text_layer_get_layer(hour_layer), (GRect) { .origin = { 0, bounds.size.h/2-62 }, .size = { bounds.size.w, 65 } });
-  layer_set_frame(text_layer_get_layer(hour_label_layer), (GRect) { .origin = { 0, bounds.size.h/2-12 }, .size = { bounds.size.w, 15 } });
-  layer_set_frame(text_layer_get_layer(min_layer), (GRect) { .origin = { 0, bounds.size.h/2-8 }, .size = { bounds.size.w, 65 } });
-  layer_set_frame(text_layer_get_layer(min_label_layer), (GRect) { .origin = { 0, bounds.size.h/2+42 }, .size = { bounds.size.w, 15 } });
-  int step_bottom = bounds.size.h/2-62;
+  GRect hour_rect = layer_get_frame(text_layer_get_layer(hour_layer));
+  hour_rect.origin.y = bounds.size.h/2 - TIME_LAYER_HEIGHT - LABEL_LAYER_HEIGHT;
+  layer_set_frame(text_layer_get_layer(hour_layer), hour_rect);
+
+  GRect hour_label_rect = layer_get_frame(text_layer_get_layer(hour_label_layer));
+  hour_label_rect.origin.y = hour_rect.origin.y + TIME_LAYER_HEIGHT;
+  layer_set_frame(text_layer_get_layer(hour_label_layer), hour_label_rect);
+
+  GRect min_rect = layer_get_frame(text_layer_get_layer(min_layer));
+  min_rect.origin.y = hour_label_rect.origin.y + LABEL_LAYER_HEIGHT;
+  layer_set_frame(text_layer_get_layer(min_layer), min_rect);
+
+  GRect min_label_rect = layer_get_frame(text_layer_get_layer(min_label_layer));
+  min_label_rect.origin.y = min_rect.origin.y + TIME_LAYER_HEIGHT;
+  layer_set_frame(text_layer_get_layer(min_label_layer), min_label_rect);
+
+  int step_bottom = hour_rect.origin.y;
   APP_LOG(APP_LOG_LEVEL_INFO, "Step bottom is %d", step_bottom);
   if (step_bottom > STEP_LAYER_HEIGHT) {
-    layer_set_frame(text_layer_get_layer(step_layer), (GRect) { .origin = { 0, 1 }, .size = { bounds.size.w, STEP_LAYER_HEIGHT } });
     layer_set_hidden(text_layer_get_layer(step_layer), false);
   }
   else {
@@ -373,11 +390,17 @@ static void prv_unobstructed_did_change(GRect bounds, void *context) {
     layer_set_hidden(text_layer_get_layer(step_layer), true);
   }
 
-  int date_top = bounds.size.h/2+57;
+  int date_top = min_label_rect.origin.y + LABEL_LAYER_HEIGHT;
   APP_LOG(APP_LOG_LEVEL_INFO, "Date top is %d", date_top);
   if (date_top + DATE_LAYER_HEIGHT < bounds.size.h) {
-    layer_set_frame(text_layer_get_layer(day_layer), (GRect) { .origin = { PBL_IF_ROUND_ELSE(0, bounds.size.w/2), date_top }, .size = { bounds.size.w, DATE_LAYER_HEIGHT } });
+    GRect day_rect = layer_get_frame(text_layer_get_layer(day_layer));
+    day_rect.origin.y = date_top;
+    layer_set_frame(text_layer_get_layer(day_layer), day_rect);
     layer_set_hidden(text_layer_get_layer(day_layer), false);
+
+    GRect month_rect = layer_get_frame(text_layer_get_layer(month_layer));
+    month_rect.origin.y = date_top;
+    layer_set_frame(text_layer_get_layer(month_layer), month_rect);
     layer_set_hidden(text_layer_get_layer(month_layer), false);
   }
   else {
