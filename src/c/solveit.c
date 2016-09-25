@@ -376,7 +376,7 @@ static void prv_unobstructed_did_change(GRect bounds, void *context) {
   int date_top = bounds.size.h/2+57;
   APP_LOG(APP_LOG_LEVEL_INFO, "Date top is %d", date_top);
   if (date_top + DATE_LAYER_HEIGHT < bounds.size.h) {
-    layer_set_frame(text_layer_get_layer(day_layer), (GRect) { .origin = { PBL_IF_ROUND_ELSE(0, bounds.size.w/2), 1 }, .size = { bounds.size.w, DATE_LAYER_HEIGHT } });
+    layer_set_frame(text_layer_get_layer(day_layer), (GRect) { .origin = { PBL_IF_ROUND_ELSE(0, bounds.size.w/2), date_top }, .size = { bounds.size.w, DATE_LAYER_HEIGHT } });
     layer_set_hidden(text_layer_get_layer(day_layer), false);
     layer_set_hidden(text_layer_get_layer(month_layer), false);
   }
