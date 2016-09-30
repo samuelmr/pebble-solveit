@@ -2,7 +2,6 @@
 #define STR_MAX_LEN 12
 #define STEP_LAYER_HEIGHT 15
 #define TIME_LAYER_HEIGHT 50
-#define TIME_LAYER_OFFSET 6
 #define LABEL_LAYER_HEIGHT 12
 #define DATE_LAYER_HEIGHT 15
 
@@ -28,6 +27,9 @@ static GColor eq_bg;
 static GColor eq_text;
 static GColor clear_bg;
 static GColor clear_text;
+static GRect full_screen;
+static int time_layer_offset;
+static bool obstructed;
 static int shake; // 0 = nothing, 1 = solve, 2 = new expression
 static bool clear = false;
 static bool hide_labels;
@@ -112,6 +114,27 @@ static void create_equation(int num, char *eq) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "No suitable op, retrying");
 }
 
+void update_view() {
+  window_set_background_color(window, clear ? clear_bg : eq_bg);
+  text_layer_set_text_color(hour_layer, clear ? clear_text : eq_text);
+  text_layer_set_text_color(min_layer, clear ? clear_text : eq_text);
+  text_layer_set_text_color(step_layer, clear ? clear_text : eq_text);
+  text_layer_set_text_color(day_layer, clear ? clear_text : eq_text);
+  text_layer_set_text_color(month_layer, clear ? clear_text : eq_text);
+
+  layer_set_hidden(text_layer_get_layer(hour_label_layer), (clear || hide_labels || obstructed) ? true : false);
+  layer_set_hidden(text_layer_get_layer(min_label_layer), (clear || hide_labels || obstructed) ? true : false);
+
+  text_layer_set_text(min_layer, min_text);
+  text_layer_set_text(hour_layer, hour_text);
+  text_layer_set_text(step_layer, step_text);
+  text_layer_set_text(day_layer, day_text);
+  text_layer_set_text(month_layer, month_text);
+
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Clear: %d, hide_labels: %d, obstructed: %d, time_layer_offset: %d", clear, hide_labels, obstructed, time_layer_offset);
+
+}
+
 static void update_time(struct tm* t) {
   int step_count = 0;
   if (show_steps) {
@@ -147,27 +170,11 @@ static void update_time(struct tm* t) {
     create_equation(t->tm_min, min_text);
     create_equation(t->tm_mday, day_text);
     create_equation(t->tm_mon + 1, month_text);
-    // APP_LOG(APP_LOG_LEVEL_DEBUG, "Got %s and %s from %d and %d", hour_text, min_text, t->tm_hour, t->tm_min);
     if (show_steps && (step_count > 0)) {
       create_equation(step_count, step_text);
     }
   }
-  window_set_background_color(window, clear ? clear_bg : eq_bg);
-  text_layer_set_text_color(hour_layer, clear ? clear_text : eq_text);
-  text_layer_set_text_color(min_layer, clear ? clear_text : eq_text);
-  text_layer_set_text_color(step_layer, clear ? clear_text : eq_text);
-  text_layer_set_text_color(day_layer, clear ? clear_text : eq_text);
-  text_layer_set_text_color(month_layer, clear ? clear_text : eq_text);
-
-  layer_set_hidden(text_layer_get_layer(hour_label_layer), (clear || hide_labels) ? true : false);
-  layer_set_hidden(text_layer_get_layer(min_label_layer), (clear || hide_labels) ? true : false);
-
-  text_layer_set_text(min_layer, min_text);
-  text_layer_set_text(hour_layer, hour_text);
-  text_layer_set_text(step_layer, step_text);
-  text_layer_set_text(day_layer, day_text);
-  text_layer_set_text(month_layer, month_text);
-
+  update_view();
 }
 
 static void tap_handler(AccelAxisType axis, int32_t direction) {
@@ -255,10 +262,7 @@ void in_received_handler(DictionaryIterator *received, void *context) {
   root = atoi(rt->value->cstring);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Configured root to: %d", root);
 
-  time_t tm = time(NULL);
-  struct tm *tms;
-  tms = localtime(&tm);
-  update_time(tms);
+  update_view();
 }
 
 void in_dropped_handler(AppMessageResult reason, void *context) {
@@ -266,33 +270,36 @@ void in_dropped_handler(AppMessageResult reason, void *context) {
 }
 
 static void fit_to_bounds(GRect bounds) {
-  GRect hour_rect = layer_get_frame(text_layer_get_layer(hour_layer));
-  hour_rect.origin.y = bounds.size.h/2 - TIME_LAYER_HEIGHT - LABEL_LAYER_HEIGHT;
-  layer_set_frame(text_layer_get_layer(hour_layer), hour_rect);
 
+  time_layer_offset = obstructed ? 0 : (int) full_screen.size.h / 25;
+
+  GRect hour_rect = layer_get_frame(text_layer_get_layer(hour_layer));
   GRect hour_label_rect = layer_get_frame(text_layer_get_layer(hour_label_layer));
+  GRect min_rect = layer_get_frame(text_layer_get_layer(min_layer));
+  GRect min_label_rect = layer_get_frame(text_layer_get_layer(min_label_layer));
+
+  hour_rect.origin.y = bounds.size.h/2 - TIME_LAYER_HEIGHT - LABEL_LAYER_HEIGHT - time_layer_offset;
+  layer_set_frame(text_layer_get_layer(hour_layer), hour_rect);
   hour_label_rect.origin.y = hour_rect.origin.y + TIME_LAYER_HEIGHT;
   layer_set_frame(text_layer_get_layer(hour_label_layer), hour_label_rect);
-
-  GRect min_rect = layer_get_frame(text_layer_get_layer(min_layer));
-  min_rect.origin.y = hour_label_rect.origin.y + LABEL_LAYER_HEIGHT;
+  min_rect.origin.y = hour_label_rect.origin.y + LABEL_LAYER_HEIGHT + time_layer_offset/2;
   layer_set_frame(text_layer_get_layer(min_layer), min_rect);
-
-  GRect min_label_rect = layer_get_frame(text_layer_get_layer(min_label_layer));
   min_label_rect.origin.y = min_rect.origin.y + TIME_LAYER_HEIGHT;
   layer_set_frame(text_layer_get_layer(min_label_layer), min_label_rect);
 
-  int step_bottom = hour_rect.origin.y;
-  APP_LOG(APP_LOG_LEVEL_INFO, "Step bottom is %d", step_bottom);
-  if (step_bottom > STEP_LAYER_HEIGHT) {
+  int hour_top = hour_rect.origin.y;
+  APP_LOG(APP_LOG_LEVEL_INFO, "hour_top is %d", hour_top);
+  if (hour_top > STEP_LAYER_HEIGHT) {
     layer_set_hidden(text_layer_get_layer(step_layer), !show_steps);
   }
   else {
-    APP_LOG(APP_LOG_LEVEL_INFO, "No room for step count, missing %d px", step_bottom-STEP_LAYER_HEIGHT);
+    APP_LOG(APP_LOG_LEVEL_INFO, "No room for step count, missing %d px", hour_top - STEP_LAYER_HEIGHT);
     layer_set_hidden(text_layer_get_layer(step_layer), true);
   }
 
-  int date_top = min_label_rect.origin.y + LABEL_LAYER_HEIGHT;
+  int time_bottom = min_label_rect.origin.y + LABEL_LAYER_HEIGHT;
+  int bottom_margin = bounds.origin.y + bounds.size.h - time_bottom - DATE_LAYER_HEIGHT;
+  int date_top = time_bottom + (bottom_margin / 2);
   APP_LOG(APP_LOG_LEVEL_INFO, "Date top is %d", date_top);
   if (date_top + DATE_LAYER_HEIGHT < bounds.size.h) {
     GRect day_rect = layer_get_frame(text_layer_get_layer(day_layer));
@@ -306,16 +313,19 @@ static void fit_to_bounds(GRect bounds) {
     layer_set_hidden(text_layer_get_layer(month_layer), PBL_IF_ROUND_ELSE(true, !show_month));
   }
   else {
-    // IDEA: always hide labels when area is obstructed?
     APP_LOG(APP_LOG_LEVEL_INFO, "No room for day and month, missing %d px", date_top + DATE_LAYER_HEIGHT - bounds.size.h);
     layer_set_hidden(text_layer_get_layer(day_layer), true);
     layer_set_hidden(text_layer_get_layer(month_layer), true);
   }
+  update_view();
 }
 
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
+  full_screen = layer_get_bounds(window_layer);
   GRect bounds = layer_get_unobstructed_bounds(window_layer);
+  obstructed = !grect_equal(&full_screen, &bounds);
+  APP_LOG(APP_LOG_LEVEL_INFO, "Obstructed: %d", obstructed);
   eq_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_48));
   clear_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_64));
   label_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_14));
@@ -339,7 +349,7 @@ static void window_load(Window *window) {
   clear_text = GColorBlack;
 #endif
 
-  int hour_top = bounds.size.h/2 - TIME_LAYER_HEIGHT - LABEL_LAYER_HEIGHT - TIME_LAYER_OFFSET;
+  int hour_top = bounds.size.h/2 - TIME_LAYER_HEIGHT - LABEL_LAYER_HEIGHT - time_layer_offset;
   hour_layer = text_layer_create((GRect) { .origin = { 0, hour_top }, .size = { bounds.size.w, 65 } });
   text_layer_set_font(hour_layer, eq_font);
   text_layer_set_text(hour_layer, hour_text);
@@ -355,7 +365,7 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(hour_label_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(hour_label_layer));
 
-  int min_top = hour_top + TIME_LAYER_HEIGHT + LABEL_LAYER_HEIGHT + TIME_LAYER_OFFSET/2;
+  int min_top = hour_top + TIME_LAYER_HEIGHT + LABEL_LAYER_HEIGHT + time_layer_offset/2;
   min_layer = text_layer_create((GRect) { .origin = { 0, min_top }, .size = { bounds.size.w, 65 } });
   text_layer_set_font(min_layer, eq_font);
   text_layer_set_text(min_layer, min_text);
@@ -414,6 +424,8 @@ static void window_unload(Window *window) {
 }
 
 static void prv_unobstructed_did_change(GRect bounds, void *context) {
+  obstructed = !grect_equal(&full_screen, &bounds);
+  APP_LOG(APP_LOG_LEVEL_INFO, "Obstructed: %d", obstructed);
   fit_to_bounds(bounds);
 }
 
