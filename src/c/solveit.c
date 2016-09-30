@@ -161,9 +161,6 @@ static void update_time(struct tm* t) {
 
   layer_set_hidden(text_layer_get_layer(hour_label_layer), (clear || hide_labels) ? true : false);
   layer_set_hidden(text_layer_get_layer(min_label_layer), (clear || hide_labels) ? true : false);
-  layer_set_hidden(text_layer_get_layer(step_layer), !show_steps);
-  layer_set_hidden(text_layer_get_layer(month_layer), PBL_IF_ROUND_ELSE(true, !show_month));
-  layer_set_hidden(text_layer_get_layer(day_layer), !show_day);
 
   text_layer_set_text(min_layer, min_text);
   text_layer_set_text(hour_layer, hour_text);
@@ -215,14 +212,17 @@ void in_received_handler(DictionaryIterator *received, void *context) {
 
   Tuple *ht = dict_find(received, MESSAGE_KEY_STEPS);
   show_steps = ht->value->int8 ? true : false;
+  layer_set_hidden(text_layer_get_layer(step_layer), !show_steps);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Set show_steps to: %d", show_steps);
 
   Tuple *dayt = dict_find(received, MESSAGE_KEY_DAY);
   show_day = dayt->value->int8 ? true : false;
+  layer_set_hidden(text_layer_get_layer(day_layer), !show_day);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Set show_day to: %d", show_day);
 
   Tuple *montht = dict_find(received, MESSAGE_KEY_MONTH);
   show_month = montht->value->int8 ? true : false;
+  layer_set_hidden(text_layer_get_layer(month_layer), PBL_IF_ROUND_ELSE(true, !show_month));
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Set show_month to: %d", show_month);
 
   Tuple *at = dict_find(received, MESSAGE_KEY_ADD);
@@ -263,6 +263,54 @@ void in_received_handler(DictionaryIterator *received, void *context) {
 
 void in_dropped_handler(AppMessageResult reason, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Message from phone dropped: %d", reason);
+}
+
+static void fit_to_bounds(GRect bounds) {
+  GRect hour_rect = layer_get_frame(text_layer_get_layer(hour_layer));
+  hour_rect.origin.y = bounds.size.h/2 - TIME_LAYER_HEIGHT - LABEL_LAYER_HEIGHT;
+  layer_set_frame(text_layer_get_layer(hour_layer), hour_rect);
+
+  GRect hour_label_rect = layer_get_frame(text_layer_get_layer(hour_label_layer));
+  hour_label_rect.origin.y = hour_rect.origin.y + TIME_LAYER_HEIGHT;
+  layer_set_frame(text_layer_get_layer(hour_label_layer), hour_label_rect);
+
+  GRect min_rect = layer_get_frame(text_layer_get_layer(min_layer));
+  min_rect.origin.y = hour_label_rect.origin.y + LABEL_LAYER_HEIGHT;
+  layer_set_frame(text_layer_get_layer(min_layer), min_rect);
+
+  GRect min_label_rect = layer_get_frame(text_layer_get_layer(min_label_layer));
+  min_label_rect.origin.y = min_rect.origin.y + TIME_LAYER_HEIGHT;
+  layer_set_frame(text_layer_get_layer(min_label_layer), min_label_rect);
+
+  int step_bottom = hour_rect.origin.y;
+  APP_LOG(APP_LOG_LEVEL_INFO, "Step bottom is %d", step_bottom);
+  if (step_bottom > STEP_LAYER_HEIGHT) {
+    layer_set_hidden(text_layer_get_layer(step_layer), !show_steps);
+  }
+  else {
+    APP_LOG(APP_LOG_LEVEL_INFO, "No room for step count, missing %d px", step_bottom-STEP_LAYER_HEIGHT);
+    layer_set_hidden(text_layer_get_layer(step_layer), true);
+  }
+
+  int date_top = min_label_rect.origin.y + LABEL_LAYER_HEIGHT;
+  APP_LOG(APP_LOG_LEVEL_INFO, "Date top is %d", date_top);
+  if (date_top + DATE_LAYER_HEIGHT < bounds.size.h) {
+    GRect day_rect = layer_get_frame(text_layer_get_layer(day_layer));
+    day_rect.origin.y = date_top;
+    layer_set_frame(text_layer_get_layer(day_layer), day_rect);
+    layer_set_hidden(text_layer_get_layer(day_layer), !show_day);
+
+    GRect month_rect = layer_get_frame(text_layer_get_layer(month_layer));
+    month_rect.origin.y = date_top;
+    layer_set_frame(text_layer_get_layer(month_layer), month_rect);
+    layer_set_hidden(text_layer_get_layer(month_layer), PBL_IF_ROUND_ELSE(true, !show_month));
+  }
+  else {
+    // IDEA: always hide labels when area is obstructed?
+    APP_LOG(APP_LOG_LEVEL_INFO, "No room for day and month, missing %d px", date_top + DATE_LAYER_HEIGHT - bounds.size.h);
+    layer_set_hidden(text_layer_get_layer(day_layer), true);
+    layer_set_hidden(text_layer_get_layer(month_layer), true);
+  }
 }
 
 static void window_load(Window *window) {
@@ -351,6 +399,8 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(month_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(month_layer));
 
+  // hide layers that don't fit within bounds
+  fit_to_bounds(bounds);
 }
 
 static void window_unload(Window *window) {
@@ -364,50 +414,7 @@ static void window_unload(Window *window) {
 }
 
 static void prv_unobstructed_did_change(GRect bounds, void *context) {
-  GRect hour_rect = layer_get_frame(text_layer_get_layer(hour_layer));
-  hour_rect.origin.y = bounds.size.h/2 - TIME_LAYER_HEIGHT - LABEL_LAYER_HEIGHT;
-  layer_set_frame(text_layer_get_layer(hour_layer), hour_rect);
-
-  GRect hour_label_rect = layer_get_frame(text_layer_get_layer(hour_label_layer));
-  hour_label_rect.origin.y = hour_rect.origin.y + TIME_LAYER_HEIGHT;
-  layer_set_frame(text_layer_get_layer(hour_label_layer), hour_label_rect);
-
-  GRect min_rect = layer_get_frame(text_layer_get_layer(min_layer));
-  min_rect.origin.y = hour_label_rect.origin.y + LABEL_LAYER_HEIGHT;
-  layer_set_frame(text_layer_get_layer(min_layer), min_rect);
-
-  GRect min_label_rect = layer_get_frame(text_layer_get_layer(min_label_layer));
-  min_label_rect.origin.y = min_rect.origin.y + TIME_LAYER_HEIGHT;
-  layer_set_frame(text_layer_get_layer(min_label_layer), min_label_rect);
-
-  int step_bottom = hour_rect.origin.y;
-  APP_LOG(APP_LOG_LEVEL_INFO, "Step bottom is %d", step_bottom);
-  if (step_bottom > STEP_LAYER_HEIGHT) {
-    layer_set_hidden(text_layer_get_layer(step_layer), false);
-  }
-  else {
-    APP_LOG(APP_LOG_LEVEL_INFO, "No room for step count, missing %d px", step_bottom-STEP_LAYER_HEIGHT);
-    layer_set_hidden(text_layer_get_layer(step_layer), true);
-  }
-
-  int date_top = min_label_rect.origin.y + LABEL_LAYER_HEIGHT;
-  APP_LOG(APP_LOG_LEVEL_INFO, "Date top is %d", date_top);
-  if (date_top + DATE_LAYER_HEIGHT < bounds.size.h) {
-    GRect day_rect = layer_get_frame(text_layer_get_layer(day_layer));
-    day_rect.origin.y = date_top;
-    layer_set_frame(text_layer_get_layer(day_layer), day_rect);
-    layer_set_hidden(text_layer_get_layer(day_layer), false);
-
-    GRect month_rect = layer_get_frame(text_layer_get_layer(month_layer));
-    month_rect.origin.y = date_top;
-    layer_set_frame(text_layer_get_layer(month_layer), month_rect);
-    layer_set_hidden(text_layer_get_layer(month_layer), false);
-  }
-  else {
-    APP_LOG(APP_LOG_LEVEL_INFO, "No room for day and month, missing %d px", date_top + DATE_LAYER_HEIGHT - bounds.size.h);
-    layer_set_hidden(text_layer_get_layer(day_layer), true);
-    layer_set_hidden(text_layer_get_layer(month_layer), true);
-  }
+  fit_to_bounds(bounds);
 }
 
 static void init(void) {
