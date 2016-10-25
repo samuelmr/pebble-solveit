@@ -1,5 +1,5 @@
 {
-    "author": "Samuel Rinnetmäki",
+    "author": "Samuel Rinnetm\u00e4ki",
     "dependencies": {
         "pebble-clay": "^1.0.2"
     },
@@ -30,9 +30,16 @@
         "resources": {
             "media": [
                 {
-                    "characterRegex": "[0-9]",
+                    "file": "images/icon25.png",
+                    "menuIcon": true,
+                    "name": "ICON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "characterRegex": "[0-9+\u00d7\u00f7\u221a\u00b2:\u2212ehimnorstu]",
                     "file": "fonts/Roboto-Bold.ttf",
-                    "name": "ROBOTO_64",
+                    "name": "ROBOTO_14",
                     "type": "font"
                 },
                 {
@@ -42,22 +49,10 @@
                     "type": "font"
                 },
                 {
-                    "characterRegex": "[0-9+\u00d7\u00f7\u221a\u00b2:\u2212ehimnorstu]",
+                    "characterRegex": "[0-9]",
                     "file": "fonts/Roboto-Bold.ttf",
-                    "name": "ROBOTO_14",
+                    "name": "ROBOTO_64",
                     "type": "font"
-                },
-                {
-                    "file": "images/icon.png",
-                    "name": "IMAGE_MENU_ICON",
-                    "type": "png"
-                },
-                {
-                    "file": "images/icon25.png",
-                    "menuIcon": true,
-                    "name": "ICON",
-                    "targetPlatforms": null,
-                    "type": "bitmap"
                 }
             ]
         },
@@ -66,7 +61,8 @@
             "aplite",
             "basalt",
             "chalk",
-            "diorite"
+            "diorite",
+            "emery"
         ],
         "uuid": "3de66e75-c670-4d9d-8e69-65e642114549",
         "watchapp": {
